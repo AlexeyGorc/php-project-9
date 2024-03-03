@@ -1,0 +1,23 @@
+{
+    "name": "hexlet/code",
+    "type": "project",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Hexlet\\Code\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "AlexeyGoncharenko",
+            "email": "zomorc@gmail.com"
+        }
+    ],
+    "require": {
+        "slim/slim": "4.*",
+        "slim/psr7": "^1.6"
+    },
+    "require-dev": {
+        "squizlabs/php_codesniffer": "*"
+    }
+}
