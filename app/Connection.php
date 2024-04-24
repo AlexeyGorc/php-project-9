@@ -2,14 +2,20 @@
 
 namespace Hexlet\Code;
 
-class Connection
+final class Connection
 {
-    private static ?Connection $connection = null;
+    private static ?Connection $conn = null;
 
-    public function connect(): \PDO
+    /**
+     * Подключение к базе данных и возврат экземпляра объекта \PDO
+     * @return \PDO
+     * @throws \Exception
+     */
+    public function connect()
     {
+
         if (getenv('DATABASE_URL')) {
-            $databaseUrl = parse_url($_ENV('DATABASE_URL'));
+            $databaseUrl = parse_url($_ENV['DATABASE_URL']);
         }
 
         if (isset($databaseUrl['host'])) {
@@ -19,14 +25,15 @@ class Connection
             $params['user'] = isset($databaseUrl['user']) ? $databaseUrl['user'] : null;
             $params['password'] = isset($databaseUrl['pass']) ? $databaseUrl['pass'] : null;
         } else {
+            // чтение параметров в файле конфигурации ini
             $params = parse_ini_file('database.ini');
         }
-
         if ($params === false) {
-            throw new \Exception('Error reading database configuration');
+            throw new \Exception("Error reading database configuration file");
         }
 
-        $connection = sprintf(
+        // подключение к базе данных postgresql
+        $conStr = sprintf(
             "pgsql:host=%s;port=%d;dbname=%s;user=%s;password=%s",
             $params['host'],
             $params['port'],
@@ -35,19 +42,19 @@ class Connection
             $params['password']
         );
 
-        $pdo = new \PDO($connection);
-        $pdo->setAttribute((int)\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+        $pdo = new \PDO($conStr);
+        $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
         $pdo->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC);
 
         return $pdo;
     }
 
-    public static function get(): ?Connection
+    public static function get()
     {
-        if (null === static::$connection) {
-            static::$connection = new self();
+        if (null === static::$conn) {
+            static::$conn = new self();
         }
 
-        return static::$connection;
+        return static::$conn;
     }
 }
