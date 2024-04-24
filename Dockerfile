@@ -1,15 +1,21 @@
-FROM php:8.2-cli
+FROM php:8.2-fpm
 
-RUN apt-get update && apt-get install -y libzip-dev libpq-dev
-RUN docker-php-ext-install zip pdo_pgsql
+RUN apt-get update && apt-get install -y libzip-dev libpq-dev nginx
+RUN docker-php-ext-install zip pdo pdo_pgsql
 
 RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
     && php composer-setup.php --install-dir=/usr/local/bin --filename=composer \
     && php -r "unlink('composer-setup.php');"
 
-WORKDIR /app
+COPY ./nginx.conf /etc/nginx/sites-available/default
 
-COPY . .
+WORKDIR /var/www/html
+
+COPY . /var/www/html
+
+EXPOSE 80
 
 RUN composer install
-CMD ["bash", "-c", "make start"]
+
+CMD ["/usr/sbin/nginx"]
+CMD systemctl php-fpm start
