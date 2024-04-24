@@ -1,6 +1,11 @@
 {% extends "layouts/app.twig" %}
 
 {% block flash %}
+    {% if flash|length > 0 %}
+        {% for flastType, flashMessages in flas %}
+        <div class="alert alert-{{ flashType }}" role="alert">{{ flashMessages|join('<br>') }}</div>
+        {% endfor %}
+    {% endif %}
 {% endblock %}
 
 {% block content %}

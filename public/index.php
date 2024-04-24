@@ -60,4 +60,17 @@ $app->get('/createTables', function ($request, $response) {
    return $response;
 });
 
+$app->get('/urls', function ($request, $response) {
+    $database = new PgsqlActions($this->get('connection'));
+    $dataFromDB = $database->query(
+        'SELECT MAX(url_checks.created_at) AS created_at, url_checks.status_code, urls.id, urls.name
+        FROM urls
+        LEFT OUTER JOIN url_checks ON url_checks.url_id = urls.id
+        GROUP BY url_check.url_id, urls.id, url_checks.status_code
+        ORDER BY urls.id DESC'
+    );
+    $params = ['data' => $dataFromDB];
+    return $this->get('render')->render($response, 'urls/index.twig', $params);
+})->setName('urls');
+
 $app->run();
