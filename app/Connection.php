@@ -27,7 +27,7 @@ class Connection
         }
 
         $connection = sprintf(
-            "psql:host=%s;port=%d;dbname=%s;user=%s;password=%s",
+            "pgsql:host=%s;port=%d;dbname=%s;user=%s;password=%s",
             $params['host'],
             $params['port'],
             $params['database'],
