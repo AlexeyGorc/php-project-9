@@ -70,7 +70,7 @@ $app->get('/urls', function ($request, $response) {
         ORDER BY urls.id DESC'
     );
     $params = ['data' => $dataFromDB];
-    return $this->get('render')->render($response, 'urls/index.twig', $params);
-})->setName('urls');
+    return $this->get('view')->render($response, 'urls/index.twig', $params);
+})->setName('url.index');
 
 $app->run();
