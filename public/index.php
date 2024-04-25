@@ -7,7 +7,7 @@ use Slim\Factory\AppFactory;
 use Slim\Views\Twig;
 use Slim\Views\TwigMiddleware;
 use Hexlet\Code\Connection;
-use Hexlet\Code\SqlExecutor;
+use Hexlet\Code\SQLExecutor;
 use Hexlet\Code\Url;
 use Hexlet\Code\UrlChecks;
 use Valitron\Validator;
@@ -29,9 +29,14 @@ $container->set('flash', function () {
     return new \Slim\Flash\Messages();
 });
 
+
 $app = AppFactory::create();
 $app->addErrorMiddleware(true, true, true);
+
+
 $app->add(TwigMiddleware::createFromContainer($app));
+
+
 $router = $app->getRouteCollector()->getRouteParser();
 
 $app->get('/', function ($request, $response) use ($router) {

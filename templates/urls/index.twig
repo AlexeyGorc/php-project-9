@@ -1,18 +1,18 @@
 {% extends "layouts/app.twig" %}
 
 {% block flash %}
-    {% if flash|length > 0 %}
-        {% for flashType, flashMessages in flash %}
-            <div class="alert alert-{{ flashType }}" role="alert">{{ flashMessages|join('<br>') }}</div>
-        {% endfor %}
-    {% endif %}
+{% if flash|length > 0 %}
+    {% for flashType, flashMessages in flash %}
+    <div class="alert alert-{{ flashType }}" role="alert">{{ flashMessages|join('<br>') }}</div>
+    {% endfor %}
+{% endif %}
 {% endblock %}
 
 {% block content %}
     <h1>Сайты</h1>
     <div class="table-responsive">
         <table class="table table-bordered table-hover text-nowrap" data-test="urls">
-            <tbody>
+        <tbody>
             <tr>
                 <th>ID</th>
                 <th>Имя</th>
@@ -21,15 +21,15 @@
             </tr>
             {% if urls|length > 0 %}
                 {% for url in urls %}
-                    <tr>
-                        <td>{{ url.getId }}</td>
-                        <td><a href="{{ router.urlFor('url.show', {'id': url.getId}) }}">{{ url.getName }}</a></td>
-                        <td>{{ url.getLastCheck.getCreatedAt }}</td>
-                        <td>{{ url.getLastCheck.getStatusCode }}</td>
-                    </tr>
+                <tr>
+                    <td>{{ url.getId }}</td>
+                    <td><a href="{{ router.urlFor('url.show', {'id': url.getId}) }}">{{ url.getName }}</a></td>
+                    <td>{{ url.getLastCheck.getCreatedAt }}</td>
+                    <td>{{ url.getLastCheck.getStatusCode }}</td>
+                </tr>
                 {% endfor %}
             {% endif %}
-            </tbody>
-        </table>
-    </div>
+        </tbody>
+    </table>
+</div>
 {% endblock %}

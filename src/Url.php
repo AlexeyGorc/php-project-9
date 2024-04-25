@@ -6,7 +6,6 @@ use Hexlet\Code\Connection;
 use Hexlet\Code\SQLExecutor;
 use Hexlet\Code\UrlChecks;
 use Carbon\Carbon;
-
 class Url
 {
     private string $name = '';
@@ -171,6 +170,9 @@ class Url
         return (!$return) ? self::create([]) : self::create(reset($return));
     }
 
+    /**
+     * @return array<int, Url>|null
+     */
     public static function getAll()
     {
         $pdo = Connection::get()->connect();
