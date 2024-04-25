@@ -171,9 +171,6 @@ class Url
         return (!$return) ? self::create([]) : self::create(reset($return));
     }
 
-    /**
-     * @return array<int, Url>|null
-     */
     public static function getAll()
     {
         $pdo = Connection::get()->connect();

@@ -36,7 +36,8 @@
         "nesbot/carbon": "^3.3",
         "vlucas/phpdotenv": "^5.6",
         "vlucas/valitron": "^1.4",
-        "imangazaliev/didom": "^2.0"
+        "imangazaliev/didom": "^2.0",
+        "laravel/helpers": "^1.7"
     },
     "require-dev": {
         "squizlabs/php_codesniffer": "*"

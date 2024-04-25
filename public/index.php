@@ -68,7 +68,7 @@ $app->post('/urls', function ($request, $response) use ($router) {
 
     $v = new Valitron\Validator(['name' => $newUrl]);
     $v->rule('required', 'name')->message('URL не должен быть пустым');
-    $v->rule('lengthMax', 'name', 25)->message('Некорректный URL. 255');
+    $v->rule('lengthMax', 'name', 255)->message('Некорректный URL. 255');
     $v->rule('url', 'name')->message('Некорректный URL');
 
     if (!$v->validate()) {
@@ -186,7 +186,7 @@ $app->post('/urls/{id:[0-9]+}/checks', function ($request, $response, $args) use
     try {
         $urlCheck = new UrlChecks();
         $urlCheckId = $urlCheck->setUrlId($urlId)->setStatusCode((string)$statusCode)->setH1($documentH1)
-            ->setTitle($documentTitle)->setDescrioption($documentDescription)->store()->getId();
+            ->setTitle($documentTitle)->setDescription($documentDescription)->store()->getId();
     } catch (\Exception | \PDOException $e) {
         $this->get('flash')->addMessage('danger', $e->getMessage());
         return $response->withRedirect($router->urlFor('index'));

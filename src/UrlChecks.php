@@ -140,7 +140,7 @@ class UrlChecks
         $pdo = Connection::get()->connect();
         $executor = new SQLExecutor($pdo);
 
-        $sql = 'SELECT * FROM ' . self::$tableName . 'WHERE url_id = :url_id ORDER BY created_at DESC';
+        $sql = 'SELECT * FROM ' . self::$tableName . ' WHERE url_id = :url_id ORDER BY created_at DESC';
         $sqlParams = [
             ':url_id' => $url_id
         ];
