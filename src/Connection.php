@@ -7,7 +7,6 @@ final class Connection
     private static ?Connection $conn = null;
 
     /**
-     * Подключение к базе данных и возврат экземпляра объекта \PDO
      * @return \PDO
      * @throws \Exception
      */
@@ -25,14 +24,12 @@ final class Connection
             $params['user'] = isset($databaseUrl['user']) ? $databaseUrl['user'] : null;
             $params['password'] = isset($databaseUrl['pass']) ? $databaseUrl['pass'] : null;
         } else {
-            // чтение параметров в файле конфигурации ini
             $params = parse_ini_file('database.ini');
         }
         if ($params === false) {
             throw new \Exception("Error reading database configuration file");
         }
 
-        // подключение к базе данных postgresql
         $conStr = sprintf(
             "pgsql:host=%s;port=%d;dbname=%s;user=%s;password=%s",
             $params['host'],

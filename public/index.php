@@ -1,76 +1,212 @@
 <?php
 
-use DI\Container;
-use Slim\Views\Twig;
-use Slim\Views\TwigMiddleware;
-use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
-use Slim\Factory\AppFactory;
-use Slim\Middleware\MethodOverrideMiddleware;
-use Hexlet\Code\Connection;
-use Hexlet\Code\PgsqlActions;
-use Hexlet\Code\PgsqlCreateTable;
-use Slim\Flash\Messages;
-use Hexlet\Code\Validator;
-use GuzzleHttp\Exception\ClientException;
-use GuzzleHttp\Exception\TransferException;
-use GuzzleHttp\Exception\ConnectException;
-use Carbon\Carbon;
-
 require __DIR__ . '/../vendor/autoload.php';
 
-session_start();
+use DI\Container;
+use Slim\Factory\AppFactory;
+use Slim\Views\Twig;
+use Slim\Views\TwigMiddleware;
+use Hexlet\Code\Connection;
+use Hexlet\Code\SqlExecutor;
+use Hexlet\Code\Url;
+use Hexlet\Code\UrlChecks;
+use Valitron\Validator;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\ConnectException;
+use GuzzleHttp\Exception\RequestException;
+use DiDom\Document;
 
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../');
-$dotenv->safeLoad();
+session_start();
 
 $container = new Container();
 AppFactory::setContainer($container);
 
-// Set view in container
-$container->set('view', function() {
+$container->set('view', function () {
     return Twig::create(__DIR__ . '/../templates');
 });
 
-$container->set('flash', function() {
-    return new SLim\Flash\Messages();
+$container->set('flash', function () {
+    return new \Slim\Flash\Messages();
 });
 
-$container->set('connection', function(){
-    return Connection::get()->connect();
-});
-
-// Create app
 $app = AppFactory::create();
 $app->addErrorMiddleware(true, true, true);
 $app->add(TwigMiddleware::createFromContainer($app));
-
-// Routes
 $router = $app->getRouteCollector()->getRouteParser();
 
-$app->get('/', function (Request $request, Response $response) use ($router) {
-    $params = [];
+// Homepage
+$app->get('/', function ($request, $response) use ($router) {
+    $messages = $this->get('flash')->getMessages();
+    $params = [
+        'flash' => $messages,
+        'currentPage' => $router->urlFor('index')
+    ];
     return $this->get('view')->render($response, 'index.twig', $params);
 })->setName('index');
 
-$app->get('/createTables', function ($request, $response) {
-   $tableCreator = new PgsqlCreateTable($this->get('connection'));
-   $tableUrls = $tableCreator->createTableUrls();
-   $tableUrlCheck = $tableCreator->createTableUrlChecks();
-   return $response;
-});
 
-$app->get('/urls', function ($request, $response) {
-    $database = new PgsqlActions($this->get('connection'));
-    $dataFromDB = $database->query(
-        'SELECT MAX(url_checks.created_at) AS created_at, url_checks.status_code, urls.id, urls.name
-        FROM urls
-        LEFT OUTER JOIN url_checks ON url_checks.url_id = urls.id
-        GROUP BY url_checks.url_id, urls.id, url_checks.status_code
-        ORDER BY urls.id DESC'
-    );
-    $params = ['data' => $dataFromDB];
+// Urls
+$app->get('/urls', function ($request, $response) use ($router) {
+    try {
+        $urls = Url::getAll();
+    } catch (\Exception | \PDOException $e) {
+        $this->get('flash')->addMessage('danger', $e->getMessage());
+        return $response->withRedirect($router->urlFor('index'));
+    }
+
+    $params = [
+        'router' => $router,
+        'urls' => $urls,
+        'currentPage' => $router->urlFor('index')
+    ];
+
     return $this->get('view')->render($response, 'urls/index.twig', $params);
 })->setName('url.index');
+
+$app->post('/urls', function ($request, $response) use ($router) {
+   $parsedUrl = $request->getParsedBodyParam('url');
+   $newUrl = htmlspecialchars($parsedUrl['name']);
+
+   $v = new Valitron\Validator(['name' => $newUrl]);
+   $v->rule('required', 'name')->message('Url не должен быть пустым');
+   $v->rule('lengthMax', 'name', 25)->message('Некорректный URL. 255');
+   $v->rule('url', 'name')->message('Некорректный URL');
+
+   if (!$v->validate()) {
+       $params = [
+           'errors' => $v->errors(),
+           'currentPage' => $router->urlFor('index')
+       ];
+
+       return $this->get('view')->render($response->withStatus(422), 'index.twig', $params);
+   }
+
+   $urlId = 0;
+   try {
+       $url = Url::byName($newUrl);
+
+       if ($url->getId() > 0) {
+           $this->get('flash')->addMessage('success', 'Страница существует');
+           return $response->withRedirect($router->urlFor('url.show', ['id' => (string)$url->getId()]));
+       }
+       $urlId = $url->setName($newUrl)->store()->getId();
+   } catch (\Exception | \PDOException $e) {
+       $this->get('flash')->addMessage('danger', $e->getMessage());
+       return $response->withRedirect($router->urlFor('index'));
+   }
+
+   if ($urlId <= 0) {
+       $this->get('flash')->addMessage('danger', 'Что-то пошло не так');
+       return $response->withRedirect($router->urlFor('index'));
+   }
+
+   $this->get('flash')->addMessage('success', 'Страница успешно добавлена');
+
+   return $response->withRedirect($router->urlFor('url.show', ['id' => (string)$urlId]));
+})->setName('url.show');
+
+$app->get('/urls/{id:[0-9]+}', function ($request, $response, $args) use ($router) {
+    $id = $args['id'];
+
+    try {
+        $url = Url::byId($id);
+
+        if (!$url->getId()) {
+            return $this->get('view')->render($response->withStatus(404), 'error404.twig');
+        }
+    } catch (\Exception | \PDOException $e) {
+        $this->get('flash')->addMessage('danger', $e->getMessage());
+        return $response->withRedirect($router->urlFor('index'));
+    }
+
+    $messages = $this->get('flash')->getMessages();
+
+    $params = [
+        'flash' => $messages,
+        'url' => $url,
+        'routerUrlCheck' => $router->urlFor('url.check', ['id' => (string)$url->getId])
+    ];
+    return $this->get('view')->render($response, 'urls/show.twig', $params);
+})->setName('url.show');
+
+$app->post('/urls/{id:[0-9]+}/checks', function ($request, $response, $args) use ($router) {
+    $id = $args['id'];
+
+    $urlId = 0;
+    try {
+        $url = Url::byId($id);
+        $urlId = $url->getId();
+    } catch (\Exception | \PDOException $e) {
+        $this->get('flash')->addMessage('danger', $e->getMessage());
+        return $response->withRedirect($router->urlFor('index'));
+    }
+
+    if ($urlId <= 0) {
+        $this->get('flash')->addMessage('danger', 'Что-то пошло не так');
+        return $response->withRedirect($router->urlFor('index'));
+    }
+
+    // проверка урла
+    $statusCode = null;
+    $responseBody = '';
+    try {
+        $guzzleClient = new Client();
+        $guzzleResponse = $guzzleClient->request('GET', $url->getName(), ['connect_timeout' => 3]);
+        $statusCode = $guzzleResponse->getStatusCode();
+        $responseBody = (string) $guzzleResponse->getBody();
+    } catch (ConnectException $e) {
+        $statusCode = $e->getCode();
+
+        if (!$statusCode) {
+            $this->get('flash')->addMessage('danger', 'Произошла ошибка при проверке, не удалось подключиться ');
+            return $response->withRedirect($router->urlFor('url.show', ['id' => (string)$urlId]));
+        }
+    } catch (RequestException $e) {
+        $statusCode = $e->getCode();
+
+        if ($e->hasResponse()) {
+            $guzzleResponse = $e->getResponse();
+            if ($guzzleResponse instanceof \Psr\Http\Message\ResponseInterface) {
+                $statusCode = $guzzleResponse->getStatusCode();
+                $responseBody = (string) $guzzleResponse->getBody();
+            }
+        }
+    }
+
+    if (!$statusCode) {
+        $this->get('flash')->addMessage('danger', 'Произошла ошибка при проверке, не удалось подключиться ');
+        return $response->withRedirect($router->urlFor('url.show', ['id' => (string)$urlId]));
+    }
+
+
+    $document = new Document($responseBody);
+    $documentTitle = optional($document->first('title'))->text() ?? '';
+    $documentH1 = optional($document->first('h1'))->text() ?? '';
+    $documentDescription = optional($document->first('meta[name="description"]'))->attr('content') ?? '';
+
+    $urlCheckId = 0;
+    try {
+        $urlCheck = new UrlChecks();
+        $urlCheckId = $urlCheck->setUrlId($urlId)->setStatusCode((string)$statusCode)->setH1($documentH1)
+            ->setTitle($documentTitle)->setDescrioption($documentDescription)->store()->getId();
+    } catch (\Exception | \PDOException $e) {
+        $this->get('flash')->addMessage('danger', $e->getMessage());
+        return $response->withRedirect($router->urlFor('index'));
+    }
+
+    if ($urlCheckId <= 0) {
+        $this->get('flash')->addMessage('danger', 'Что-то пошло не так');
+        return $response->withRedirect($router->urlFor('index'));
+    }
+
+
+    if ($statusCode >= 400) {
+        $this->get('flash')->addMessage('warning', 'Проверка была выполнена успешно, но сервер ответил с ошибкой ');
+    } else {
+        $this->get('flash')->addMessage('success', 'Страница успешно проверена');
+    }
+
+    return $response->withRedirect($router->urlFor('url.show', ['id' => (string)$urlId]));
+})->setName('url.check');
 
 $app->run();
