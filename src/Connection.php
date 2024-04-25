@@ -2,9 +2,13 @@
 
 namespace Hexlet\Code;
 
-final class Connection
+class Connection
 {
-    private static ?Connection $conn = null;
+    /**
+     * @var Connection|null
+     */
+    private static $conn = null;
+
 
     /**
      * @return \PDO
@@ -12,26 +16,25 @@ final class Connection
      */
     public function connect()
     {
-
-        if (getenv('DATABASE_URL')) {
-            $databaseUrl = parse_url($_ENV['DATABASE_URL']);
-        }
-
-        if (isset($databaseUrl['host'])) {
-            $params['host'] = $databaseUrl['host'];
-            $params['port'] = isset($databaseUrl['port']) ? $databaseUrl['port'] : null;
-            $params['database'] = isset($databaseUrl['path']) ? ltrim($databaseUrl['path'], '/') : null;
-            $params['user'] = isset($databaseUrl['user']) ? $databaseUrl['user'] : null;
-            $params['password'] = isset($databaseUrl['pass']) ? $databaseUrl['pass'] : null;
+        if (array_key_exists('DATABASE_URL', $_ENV)) {
+            $dbUrl = parse_url($_ENV['DATABASE_URL']);
+            $params = [
+                'host' => $dbUrl['host'] ?? '',
+                'port' => $dbUrl['port'] ?? '',
+                'database' => ltrim($dbUrl['path'] ?? '', '/'),
+                'user' => $dbUrl['user'] ?? '',
+                'password' => $dbUrl['pass'] ?? ''
+            ];
         } else {
             $params = parse_ini_file('database.ini');
         }
+
         if ($params === false) {
-            throw new \Exception("Error reading database configuration file");
+            throw new \Exception('Error reading database configuration');
         }
 
         $conStr = sprintf(
-            "pgsql:host=%s;port=%d;dbname=%s;user=%s;password=%s",
+            'pgsql:host=%s;port=%d;dbname=%s;user=%s;password=%s',
             $params['host'],
             $params['port'],
             $params['database'],
@@ -41,17 +44,23 @@ final class Connection
 
         $pdo = new \PDO($conStr);
         $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-        $pdo->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC);
 
         return $pdo;
     }
 
+    /**
+     * @return Connection
+     */
     public static function get()
     {
-        if (null === static::$conn) {
-            static::$conn = new self();
+        if (is_null(self::$conn)) {
+            self::$conn = new self();
         }
 
-        return static::$conn;
+        return self::$conn;
+    }
+
+    protected function __construct()
+    {
     }
 }

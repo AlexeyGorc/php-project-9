@@ -34,9 +34,9 @@ $app->addErrorMiddleware(true, true, true);
 $app->add(TwigMiddleware::createFromContainer($app));
 $router = $app->getRouteCollector()->getRouteParser();
 
-// Homepage
 $app->get('/', function ($request, $response) use ($router) {
     $messages = $this->get('flash')->getMessages();
+
     $params = [
         'flash' => $messages,
         'currentPage' => $router->urlFor('index')
@@ -44,8 +44,6 @@ $app->get('/', function ($request, $response) use ($router) {
     return $this->get('view')->render($response, 'index.twig', $params);
 })->setName('index');
 
-
-// Urls
 $app->get('/urls', function ($request, $response) use ($router) {
     try {
         $urls = Url::getAll();
@@ -57,53 +55,54 @@ $app->get('/urls', function ($request, $response) use ($router) {
     $params = [
         'router' => $router,
         'urls' => $urls,
-        'currentPage' => $router->urlFor('index')
+        'currentPage' => $router->urlFor('url.index')
     ];
 
     return $this->get('view')->render($response, 'urls/index.twig', $params);
 })->setName('url.index');
 
 $app->post('/urls', function ($request, $response) use ($router) {
-   $parsedUrl = $request->getParsedBodyParam('url');
-   $newUrl = htmlspecialchars($parsedUrl['name']);
+    $parsedUrl = $request->getParsedBodyParam('url');
 
-   $v = new Valitron\Validator(['name' => $newUrl]);
-   $v->rule('required', 'name')->message('Url не должен быть пустым');
-   $v->rule('lengthMax', 'name', 25)->message('Некорректный URL. 255');
-   $v->rule('url', 'name')->message('Некорректный URL');
+    $newUrl = htmlspecialchars($parsedUrl['name']);
 
-   if (!$v->validate()) {
-       $params = [
-           'errors' => $v->errors(),
-           'currentPage' => $router->urlFor('index')
-       ];
+    $v = new Valitron\Validator(['name' => $newUrl]);
+    $v->rule('required', 'name')->message('URL не должен быть пустым');
+    $v->rule('lengthMax', 'name', 25)->message('Некорректный URL. 255');
+    $v->rule('url', 'name')->message('Некорректный URL');
 
-       return $this->get('view')->render($response->withStatus(422), 'index.twig', $params);
-   }
+    if (!$v->validate()) {
+        $params = [
+            'errors' => $v->errors(),
+            'currentPage' => $router->urlFor('index')
+        ];
+        return $this->get('view')->render($response->withStatus(422), 'index.twig', $params);
+    }
 
-   $urlId = 0;
-   try {
-       $url = Url::byName($newUrl);
+    $urlId = 0;
+    try {
+        $url = Url::byName($newUrl);
 
-       if ($url->getId() > 0) {
-           $this->get('flash')->addMessage('success', 'Страница существует');
-           return $response->withRedirect($router->urlFor('url.show', ['id' => (string)$url->getId()]));
-       }
-       $urlId = $url->setName($newUrl)->store()->getId();
-   } catch (\Exception | \PDOException $e) {
-       $this->get('flash')->addMessage('danger', $e->getMessage());
-       return $response->withRedirect($router->urlFor('index'));
-   }
+        if ($url->getId() > 0) {
+            $this->get('flash')->addMessage('success', 'Страница уже существует');
+            return $response->withRedirect($router->urlFor('url.show', ['id' => (string)$url->getId()]));
+        }
 
-   if ($urlId <= 0) {
-       $this->get('flash')->addMessage('danger', 'Что-то пошло не так');
-       return $response->withRedirect($router->urlFor('index'));
-   }
+        $urlId = $url->setName($newUrl)->store()->getId();
+    } catch (\Exception | \PDOException $e) {
+        $this->get('flash')->addMessage('danger', $e->getMessage());
+        return $response->withRedirect($router->urlFor('index'));
+    }
 
-   $this->get('flash')->addMessage('success', 'Страница успешно добавлена');
+    if ($urlId <= 0) {
+        $this->get('flash')->addMessage('danger', 'Что-то пошло не так');
+        return $response->withRedirect($router->urlFor('index'));
+    }
 
-   return $response->withRedirect($router->urlFor('url.show', ['id' => (string)$urlId]));
-})->setName('url.show');
+    $this->get('flash')->addMessage('success', 'Страница успешно добавлена');
+
+    return $response->withRedirect($router->urlFor('url.show', ['id' => (string)$urlId]));
+})->setName('url.store');
 
 $app->get('/urls/{id:[0-9]+}', function ($request, $response, $args) use ($router) {
     $id = $args['id'];
@@ -124,7 +123,7 @@ $app->get('/urls/{id:[0-9]+}', function ($request, $response, $args) use ($route
     $params = [
         'flash' => $messages,
         'url' => $url,
-        'routerUrlCheck' => $router->urlFor('url.check', ['id' => (string)$url->getId])
+        'routeUrlCheck' => $router->urlFor('url.check', ['id' => (string)$url->getId()])
     ];
     return $this->get('view')->render($response, 'urls/show.twig', $params);
 })->setName('url.show');
@@ -146,7 +145,6 @@ $app->post('/urls/{id:[0-9]+}/checks', function ($request, $response, $args) use
         return $response->withRedirect($router->urlFor('index'));
     }
 
-    // проверка урла
     $statusCode = null;
     $responseBody = '';
     try {

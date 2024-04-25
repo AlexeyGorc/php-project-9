@@ -19,32 +19,50 @@ class Url
         $this->id = null;
     }
 
+    /**
+     * @return string
+     */
     public function getName()
     {
         return $this->name;
     }
 
+    /**
+     * @return $this
+     */
     public function setName(string $name)
     {
         $this->name = $name;
         return $this;
     }
 
+    /**
+     * @return int|null
+     */
     public function getId()
     {
         return $this->id;
     }
 
+    /**
+     * @return void
+     */
     public function setId(int $id)
     {
         $this->id = $id;
     }
 
+    /**
+     * @return string
+     */
     public function getCreatedAt()
     {
         return Carbon::parse($this->created_at);
     }
 
+    /**
+     * @return void
+     */
     private function setField(string $name, string $value)
     {
         if (property_exists($this, $name)) {
@@ -52,6 +70,9 @@ class Url
         }
     }
 
+    /**
+     * @return array<int, UrlChecks>|null
+     */
     public function getAllChecks()
     {
         if ($this->getId() <= 0) {
@@ -59,19 +80,28 @@ class Url
         }
 
         $urlChecks = UrlChecks::getAllByUrlId($this->getId());
+
         return (!$urlChecks) ? null : $urlChecks;
     }
 
+    /**
+     * @return UrlChecks|null
+     */
     public function getLastCheck()
     {
         $urlChecks = $this->getAllChecks();
+
         return (!$urlChecks) ? null : reset($urlChecks);
     }
 
+    /**
+     * @return Url
+     * @throws \Exception
+     */
     public function store()
     {
         if ($this->getName() == '') {
-            throw new \Exception('Please set url name');
+            throw new \Exception('Can\'t store new url because have no url name');
         }
 
         $pdo = Connection::get()->connect();
@@ -87,7 +117,7 @@ class Url
             $lastId = (int)$executor->insert($sql, $sqlParams, self::$tableName);
 
             if ($lastId <= 0) {
-                throw new \Exception('Error insert data');
+                throw new \Exception('Something goes wrong. Can\'t store new url');
             }
             $this->setId($lastId);
         }
@@ -95,24 +125,55 @@ class Url
         return $this;
     }
 
-    public static function byId(int $id = 0)
+    /**
+     * @return Url
+     * @throws \Exception
+     */
+    public static function byName(string $name = '')
     {
-        if ($id <= 0) {
-            throw new \Exception('Invalid id');
+        if (trim($name) == '') {
+            throw new \Exception('Can\'t select url because have no url name');
         }
 
         $pdo = Connection::get()->connect();
         $executor = new SQLExecutor($pdo);
 
-        $sql = 'SELECT * FROM ' . self::$tableName . ' WHERE id = :id';
+        $sql = 'SELECT * FROM ' . self::$tableName . ' WHERE name=:name LIMIT 1';
+        $sqlParams = [
+            ':name' => $name
+        ];
+
+        $return = $executor->select($sql, $sqlParams);
+
+        return (!$return) ? self::create([]) : self::create(reset($return));
+    }
+
+    /**
+     * @return Url
+     * @throws \Exception
+     */
+    public static function byId(int $id = 0)
+    {
+        if ($id <= 0) {
+            throw new \Exception('Can\'t select url because id = 0');
+        }
+
+        $pdo = Connection::get()->connect();
+        $executor = new SQLExecutor($pdo);
+
+        $sql = 'SELECT * FROM ' . self::$tableName . ' WHERE id=:id';
         $sqlParams = [
             ':id' => $id
         ];
 
         $return = $executor->select($sql, $sqlParams);
+
         return (!$return) ? self::create([]) : self::create(reset($return));
     }
 
+    /**
+     * @return array<int, Url>|null
+     */
     public static function getAll()
     {
         $pdo = Connection::get()->connect();
@@ -128,12 +189,16 @@ class Url
         }
 
         $returnUrls = array_map(function ($row) {
-           return self::create($row);
+            return self::create($row);
         }, $selectedRows);
 
         return $returnUrls;
     }
 
+    /**
+     * @param array<string, string> $fields
+     * @return Url
+     */
     private static function create($fields)
     {
         $url = new self();
