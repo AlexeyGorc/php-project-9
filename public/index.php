@@ -22,20 +22,17 @@ $container = new Container();
 AppFactory::setContainer($container);
 
 $container->set('view', function () {
-    return Twig::create(__DIR__ . '/../templates');
+    return Twig::create(__DIR__ . '/../templates'/*, ['cache' => '../cache']*/);
 });
 
 $container->set('flash', function () {
     return new \Slim\Flash\Messages();
 });
 
-
 $app = AppFactory::create();
 $app->addErrorMiddleware(true, true, true);
 
-
 $app->add(TwigMiddleware::createFromContainer($app));
-
 
 $router = $app->getRouteCollector()->getRouteParser();
 
@@ -191,7 +188,7 @@ $app->post('/urls/{id:[0-9]+}/checks', function ($request, $response, $args) use
     try {
         $urlCheck = new UrlChecks();
         $urlCheckId = $urlCheck->setUrlId($urlId)->setStatusCode((string)$statusCode)->setH1($documentH1)
-            ->setTitle($documentTitle)->setDescription($documentDescription)->store()->getId();
+        ->setTitle($documentTitle)->setDescription($documentDescription)->store()->getId();
     } catch (\Exception | \PDOException $e) {
         $this->get('flash')->addMessage('danger', $e->getMessage());
         return $response->withRedirect($router->urlFor('index'));

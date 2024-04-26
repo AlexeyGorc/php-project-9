@@ -6,13 +6,7 @@
     "autoload": {
         "psr-4": {
             "Hexlet\\Code\\": "src/"
-        },
-        "files": [
-            "src/Connection.php",
-            "src/SQLExecutor.php",
-            "src/Url.php",
-            "src/UrlChecks.php"
-        ]
+        }
     },
     "authors": [
         {
