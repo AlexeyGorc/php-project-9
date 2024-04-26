@@ -3,7 +3,7 @@
 namespace Hexlet\Code;
 
 use Hexlet\Code\Connection;
-use Hexlet\Code\PostgreSQLExecutor;
+use Hexlet\Code\SQLExecutor;
 use Carbon\Carbon;
 use Hexlet\Code\UrlChecks;
 
@@ -105,7 +105,7 @@ class Url
         }
 
         $pdo = Connection::get()->connect();
-        $executor = new PostgreSQLExecutor($pdo);
+        $executor = new SQLExecutor($pdo);
 
         if (is_null($this->getId())) {
             $sql = 'INSERT INTO ' . self::$tableName . ' (name, created_at) VALUES (:name, :created_at)';
@@ -136,7 +136,7 @@ class Url
         }
 
         $pdo = Connection::get()->connect();
-        $executor = new PostgreSQLExecutor($pdo);
+        $executor = new SQLExecutor($pdo);
 
         $sql = 'SELECT * FROM ' . self::$tableName . ' WHERE name=:name LIMIT 1';
         $sqlParams = [
@@ -159,7 +159,7 @@ class Url
         }
 
         $pdo = Connection::get()->connect();
-        $executor = new PostgreSQLExecutor($pdo);
+        $executor = new SQLExecutor($pdo);
 
         $sql = 'SELECT * FROM ' . self::$tableName . ' WHERE id=:id';
         $sqlParams = [
@@ -177,7 +177,7 @@ class Url
     public static function getAll()
     {
         $pdo = Connection::get()->connect();
-        $executor = new PostgreSQLExecutor($pdo);
+        $executor = new SQLExecutor($pdo);
 
         $sql = 'SELECT * FROM ' . self::$tableName . ' ORDER BY created_at DESC';
         $sqlParams = [];

@@ -3,7 +3,7 @@
 namespace Hexlet\Code;
 
 use Hexlet\Code\Connection;
-use Hexlet\Code\PostgreSQLExecutor;
+use Hexlet\Code\SQLExecutor;
 use Carbon\Carbon;
 
 class UrlChecks
@@ -155,7 +155,7 @@ class UrlChecks
         }
 
         $pdo = Connection::get()->connect();
-        $executor = new PostgreSQLExecutor($pdo);
+        $executor = new SQLExecutor($pdo);
 
         if (is_null($this->getId())) {
             $sql = 'INSERT INTO ' . self::$tableName .
@@ -192,7 +192,7 @@ class UrlChecks
         }
 
         $pdo = Connection::get()->connect();
-        $executor = new PostgreSQLExecutor($pdo);
+        $executor = new SQLExecutor($pdo);
 
         $sql = 'SELECT * FROM ' . self::$tableName . ' WHERE url_id=:url_id  ORDER BY created_at DESC';
         $sqlParams = [

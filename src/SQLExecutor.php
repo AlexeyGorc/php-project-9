@@ -2,10 +2,11 @@
 
 namespace Hexlet\Code;
 
-use PDO;
-
 class SQLExecutor
 {
+    /**
+     * @var \PDO
+     */
     private $pdo;
 
     public function __construct(\PDO $pdo)
@@ -13,13 +14,24 @@ class SQLExecutor
         $this->pdo = $pdo;
     }
 
+    /**
+     * @param string $sql
+     * @param array<string, string|int> $params
+     * @param string $tableName
+     * @return string|false
+     */
     public function insert($sql, $params, $tableName)
     {
         $this->executeQuery($sql, $params);
 
-        return $this->pdo->lastInsertId($tableName . 'id_seq');
+        return $this->pdo->lastInsertId($tableName . '_id_seq');
     }
 
+    /**
+     * @param string $sql
+     * @param array<string, string|int> $params
+     * @return false|array<int, array<mixed>>
+     */
     public function select($sql, $params)
     {
         $data = $this->executeQuery($sql, $params);
@@ -27,10 +39,16 @@ class SQLExecutor
         return $data;
     }
 
+    /**
+     * @param string $sql
+     * @param array<string, string|int> $params
+     * @return false|array<int, array<mixed>>
+     * @throws \Exception
+     */
     public function executeQuery($sql, $params)
     {
         if ($sql == '') {
-            throw new \Exception('Empty query');
+            throw new \Exception('Can\'t execute empty sql');
         }
 
         $stmt = $this->pdo->prepare($sql);
@@ -40,6 +58,7 @@ class SQLExecutor
         }
 
         $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 }
