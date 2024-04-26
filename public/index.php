@@ -46,6 +46,13 @@ $app->get('/', function ($request, $response) use ($router) {
     return $this->get('view')->render($response, 'index.twig', $params);
 })->setName('index');
 
+$app->get('/createTables', function ($request, $response) {
+    $tableCreator = new CreatorTables($this->get('connection'));
+    $tables = $tableCreator->createTables();
+    $tablesCheck = $tableCreator->createTableWithChecks();
+    return $response;
+});
+
 $app->get('/urls', function ($request, $response) use ($router) {
     try {
         $urls = Url::getAll();

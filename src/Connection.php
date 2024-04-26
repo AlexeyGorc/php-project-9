@@ -34,7 +34,6 @@ class Connection
             throw new \Exception("Error reading database configuration file");
         }
 
-        // подключение к базе данных postgresql
         $conStr = sprintf(
             "pgsql:host=%s;port=%d;dbname=%s;user=%s;password=%s",
             $params['host'],
