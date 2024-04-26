@@ -20,7 +20,7 @@ class Connection
             $dbUrl = parse_url($_ENV['DATABASE_URL']);
             $params = [
                 'host' => $dbUrl['host'] ?? '',
-                'port' => $dbUrl['port'] ?? '',
+                'port' => $dbUrl['port'] ?? 5432,
                 'database' => ltrim($dbUrl['path'] ?? '', '/'),
                 'user' => $dbUrl['user'] ?? '',
                 'password' => $dbUrl['pass'] ?? ''
