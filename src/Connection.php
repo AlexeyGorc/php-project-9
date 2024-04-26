@@ -5,36 +5,38 @@ namespace Hexlet\Code;
 class Connection
 {
     /**
-     * @var Connection|null
+     * Connection
+     * тип @var
      */
-    private static $conn = null;
-
+    private static ?Connection $conn = null;
 
     /**
+     * Подключение к базе данных и возврат экземпляра объекта \PDO
      * @return \PDO
      * @throws \Exception
      */
     public function connect()
     {
-        if (array_key_exists('DATABASE_URL', $_ENV)) {
-            $dbUrl = parse_url($_ENV['DATABASE_URL']);
-            $params = [
-                'host' => $dbUrl['host'] ?? '',
-                'port' => $dbUrl['port'] ?? '',
-                'database' => ltrim($dbUrl['path'] ?? '', '/'),
-                'user' => $dbUrl['user'] ?? '',
-                'password' => $dbUrl['pass'] ?? ''
-            ];
+        if (getenv('DATABASE_URL')) {
+            $databaseUrl = parse_url(getenv('DATABASE_URL'));
+        }
+
+        if (isset($databaseUrl['host'])) {
+            $params['host'] = $databaseUrl['host'];
+            $params['port'] = isset($databaseUrl['port']) ? $databaseUrl['port'] : null;
+            $params['database'] = isset($databaseUrl['path']) ? ltrim($databaseUrl['path'], '/') : null;
+            $params['user'] = isset($databaseUrl['user']) ? $databaseUrl['user'] : null;
+            $params['password'] = isset($databaseUrl['pass']) ? $databaseUrl['pass'] : null;
         } else {
             $params = parse_ini_file('database.ini');
         }
-
         if ($params === false) {
-            throw new \Exception('Error reading database configuration');
+            throw new \Exception("Error reading database configuration file");
         }
 
+        // подключение к базе данных postgresql
         $conStr = sprintf(
-            'pgsql:host=%s;port=%d;dbname=%s;user=%s;password=%s',
+            "pgsql:host=%s;port=%d;dbname=%s;user=%s;password=%s",
             $params['host'],
             $params['port'],
             $params['database'],
