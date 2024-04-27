@@ -10,7 +10,7 @@ class UrlChecks
 {
     private ?int $id;
     private int $url_id;
-    private string $status_code = '';
+    private int $status_code;
     private string $h1 = '';
     private string $title = '';
     private string $description = '';
