@@ -187,7 +187,7 @@ $app->post('/urls/{id:[0-9]+}/checks', function ($request, $response, $args) use
     $urlCheckId = 0;
     try {
         $urlCheck = new UrlChecks();
-        $urlCheckId = $urlCheck->setUrlId($urlId)->setStatusCode((string)$statusCode)->setH1($documentH1)
+        $urlCheckId = $urlCheck->setUrlId($urlId)->setStatusCode((int)$statusCode)->setH1($documentH1)
         ->setTitle($documentTitle)->setDescription($documentDescription)->store()->getId();
     } catch (\Exception | \PDOException $e) {
         $this->get('flash')->addMessage('danger', $e->getMessage());
