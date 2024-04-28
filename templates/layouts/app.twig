@@ -9,9 +9,10 @@
 </head>
 <body class="min-vh-100 d-flex flex-column">
 <header class="flex-shrink-0">
-    {{ include('layouts/nav.twig') }}
+    {{ include('components/nav.twig') }}
 </header>
-{% block flash %}{% endblock %}
+{{ include('layouts/flash.twig') }}
+{% block flash %} {% endblock %}
 <main class="flex-grow-1">
     <div class="container-lg mt-3">
         {% block content %}{% endblock %}
@@ -20,7 +21,7 @@
 
 <footer class="border-top py-3 mt-5 flex-shrink-0">
     <div class="container-lg">
-        {{ include('layouts/footer.twig') }}
+        {{ include('components/footer.twig') }}
     </div>
 </footer>
 </body>

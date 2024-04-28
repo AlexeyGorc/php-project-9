@@ -1,25 +1,17 @@
 {% extends "layouts/app.twig" %}
 
-{% block flash %}
-{% if flash|length > 0 %}
-    {% for flashType, flashMessages in flash %}
-    <div class="alert alert-{{ flashType }}" role="alert">{{ flashMessages|join('<br>') }}</div>
-    {% endfor %}
-{% endif %}
-{% endblock %}
-
 {% block content %}
 <div class="row">
     <div class="col-12 col-md-10 col-lg-8 mx-auto border rounded-3 bg-light p-5">
         <h1 class="display-3">Анализатор страниц</h1>
         <p class="lead">Бесплатно проверяйте сайты на SEO пригодность</p>
-        <form action="/urls" method="post" class="row" required>
+        <form action="{{ url_for('url.store') }}" method="post" class="row" required>
             <div class="col-8">
             <input
             type="text"
             name="url[name]"
-            value="{{ url.getName }}"
-            class="form-control form-control-lg{{ errors.name|length > 0 ? ' is-invalid' }}"
+            value="{{ name ?? ''}}"
+            class="form-control form-control-lg{{ errors.name ? ' is-invalid' }}"
             placeholder="https://www.example.com"
             >
             {% if errors.name|length > 0 %}

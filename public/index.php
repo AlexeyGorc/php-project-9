@@ -64,11 +64,9 @@ $app->get('/urls', function ($request, $response) use ($router) {
 })->setName('url.index');
 
 $app->post('/urls', function ($request, $response) use ($router) {
-    $parsedUrl = $request->getParsedBodyParam('url');
+    $parsedUrl = $request->getParsedBodyParam('url')['name'];
 
-    $newUrl = htmlspecialchars($parsedUrl['name']);
-
-    $v = new Valitron\Validator(['name' => $newUrl]);
+    $v = new Valitron\Validator(['name' => $parsedUrl]);
     $v->rule('required', 'name')->message('URL не должен быть пустым');
     $v->rule('lengthMax', 'name', 255)->message('Некорректный URL. 255');
     $v->rule('url', 'name')->message('Некорректный URL');
@@ -76,21 +74,21 @@ $app->post('/urls', function ($request, $response) use ($router) {
     if (!$v->validate()) {
         $params = [
             'errors' => $v->errors(),
+            'name' => $parsedUrl,
             'currentPage' => $router->urlFor('index')
         ];
         return $this->get('view')->render($response->withStatus(422), 'index.twig', $params);
     }
 
-    $urlId = 0;
     try {
-        $url = Url::byName($newUrl);
+        $url = Url::byName($parsedUrl);
 
         if ($url->getId() > 0) {
             $this->get('flash')->addMessage('success', 'Страница уже существует');
             return $response->withRedirect($router->urlFor('url.show', ['id' => (string)$url->getId()]));
         }
 
-        $urlId = $url->setName($newUrl)->store()->getId();
+        $urlId = $url->setName($parsedUrl)->store()->getId();
     } catch (\Exception | \PDOException $e) {
         $this->get('flash')->addMessage('danger', $e->getMessage());
         return $response->withRedirect($router->urlFor('index'));

@@ -32,7 +32,7 @@ class Url
      */
     public function setName(string $name)
     {
-        $this->name = $name;
+        $this->name = strtolower($name);
         return $this;
     }
 
@@ -102,6 +102,11 @@ class Url
     {
         if ($this->getName() == '') {
             throw new \Exception('Can\'t store new url because have no url name');
+        }
+
+        $existingUrl = self::byName($this->getName());
+        if ($existingUrl->getId() !== null) {
+            return $existingUrl;
         }
 
         $pdo = Connection::get()->connect();
