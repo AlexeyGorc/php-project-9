@@ -86,7 +86,7 @@ $app->post('/urls', function ($request, $response) use ($router) {
             return $response->withRedirect($router->urlFor('url.show', ['id' => (string)$url->getId()]));
         }
 
-        $urlId = $url->setName  ($parsedUrl)->store()->getId();
+        $urlId = $url->setName($parsedUrl)->store()->getId();
     } catch (\Exception | \PDOException $e) {
         $this->get('flash')->addMessage('danger', $e->getMessage());
         return $response->withRedirect($router->urlFor('index'));
