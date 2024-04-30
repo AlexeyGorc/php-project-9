@@ -1,22 +1,22 @@
 <?php
 
-namespace Hexlet\Code;
+namespace Hexlet\Code\Url;
 
-use Hexlet\Code\Connection;
-use Hexlet\Code\SQLExecutor;
 use Carbon\Carbon;
-use Hexlet\Code\UrlChecks;
+use Hexlet\Code\Database\Connection;
+use Hexlet\Code\Database\SQLExecutor;
 
 class Url
 {
     private string $name = '';
     private ?int $id;
-    private string $created_at = '';
+    private ?Carbon $createdAt = null;
     private static string $tableName = 'urls';
 
     public function __construct()
     {
         $this->id = null;
+        $this->createdAt = Carbon::now();
     }
 
     /**
@@ -53,11 +53,11 @@ class Url
     }
 
     /**
-     * @return string
+     * @return Carbon|null
      */
-    public function getCreatedAt()
+    public function getCreatedAt(): ?Carbon
     {
-        return Carbon::parse($this->created_at);
+        return $this->createdAt;
     }
 
     /**
@@ -113,10 +113,10 @@ class Url
         $executor = new SQLExecutor($pdo);
 
         if (is_null($this->getId())) {
-            $sql = 'INSERT INTO ' . self::$tableName . ' (name, created_at) VALUES (:name, :created_at)';
+            $sql = 'INSERT INTO ' . self::$tableName . ' (name, created_at) VALUES (:name, :createdAt)';
             $sqlParams = [
                 ':name' => $this->getName(),
-                ':created_at' => Carbon::now()->toDateTimeString()
+                ':createdAt' => Carbon::now()->toDateTimeString()
             ];
 
             $lastId = (int)$executor->insert($sql, $sqlParams, self::$tableName);

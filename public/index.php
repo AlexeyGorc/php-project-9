@@ -3,18 +3,16 @@
 require __DIR__ . '/../vendor/autoload.php';
 
 use DI\Container;
-use Slim\Factory\AppFactory;
-use Slim\Views\Twig;
-use Slim\Views\TwigMiddleware;
-use Hexlet\Code\Connection;
-use Hexlet\Code\SQLExecutor;
-use Hexlet\Code\Url;
-use Hexlet\Code\UrlChecks;
-use Valitron\Validator;
+use DiDom\Document;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\RequestException;
-use DiDom\Document;
+use Hexlet\Code\Url\Url;
+use Hexlet\Code\Url\UrlChecks;
+use Slim\Factory\AppFactory;
+use Slim\Views\Twig;
+use Slim\Views\TwigMiddleware;
+use Valitron\Validator;
 
 session_start();
 
@@ -88,7 +86,7 @@ $app->post('/urls', function ($request, $response) use ($router) {
             return $response->withRedirect($router->urlFor('url.show', ['id' => (string)$url->getId()]));
         }
 
-        $urlId = $url->setName($parsedUrl)->store()->getId();
+        $urlId = $url->setName  ($parsedUrl)->store()->getId();
     } catch (\Exception | \PDOException $e) {
         $this->get('flash')->addMessage('danger', $e->getMessage());
         return $response->withRedirect($router->urlFor('index'));

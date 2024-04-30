@@ -1,10 +1,10 @@
 <?php
 
-namespace Hexlet\Code;
+namespace Hexlet\Code\Url;
 
-use Hexlet\Code\Connection;
-use Hexlet\Code\SQLExecutor;
 use Carbon\Carbon;
+use Hexlet\Code\Database\Connection;
+use Hexlet\Code\Database\SQLExecutor;
 
 class UrlChecks
 {
@@ -14,13 +14,14 @@ class UrlChecks
     private string $h1 = '';
     private string $title = '';
     private string $description = '';
-    private string $created_at = '';
+    private ?Carbon $createdAt = null;
 
     private static string $tableName = 'url_checks';
 
     public function __construct()
     {
         $this->id = null;
+        $this->createdAt = Carbon::now();
     }
 
     /**
@@ -125,11 +126,11 @@ class UrlChecks
     }
 
     /**
-     * @return string
+     * @return Carbon|null
      */
-    public function getCreatedAt()
+    public function getCreatedAt(): ?Carbon
     {
-        return Carbon::parse($this->created_at);
+        return $this->createdAt;
     }
 
     /**
@@ -160,14 +161,14 @@ class UrlChecks
         if (is_null($this->getId())) {
             $sql = 'INSERT INTO ' . self::$tableName .
              ' (url_id, status_code, h1, title, description, created_at) VALUES ' .
-             '(:url_id, :status_code, :h1, :title, :description, :created_at)';
+             '(:url_id, :status_code, :h1, :title, :description, :createdAt)';
             $sqlParams = [
                 ':url_id' => $this->getUrlId(),
                 ':status_code' => $this->getStatusCode(),
                 ':h1' => $this->getH1(),
                 ':title' => $this->getTitle(),
                 ':description' => $this->getDescription(),
-                ':created_at' => Carbon::now()->toDateTimeString()
+                ':createdAt' => Carbon::now()->toDateTimeString()
             ];
 
             $lastId = (int)$executor->insert($sql, $sqlParams, self::$tableName);
