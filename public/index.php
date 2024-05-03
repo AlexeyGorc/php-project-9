@@ -184,7 +184,7 @@ $app->post('/urls/{id:[0-9]+}/checks', function ($request, $response, $args) use
     try {
         $urlCheck = new UrlChecks();
         $urlCheckId = $urlCheck->setUrlId($urlId)->setStatusCode((int)$statusCode)->setH1($documentH1)
-        ->setTitle($documentTitle)->setDescription($documentDescription)->store()->getId();
+            ->setTitle($documentTitle)->setDescription($documentDescription)->store()->getId();
     } catch (\Exception | \PDOException $e) {
         $this->get('flash')->addMessage('danger', $e->getMessage());
         return $response->withRedirect($router->urlFor('index'));

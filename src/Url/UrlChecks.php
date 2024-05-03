@@ -9,8 +9,8 @@ use Hexlet\Code\Database\SQLExecutor;
 class UrlChecks
 {
     private ?int $id;
-    private ?int $url_id = ;
-    private ?int $statusCode = null;
+    private int $url_id;
+    private int $status_code;
     private string $h1 = '';
     private string $title = '';
     private string $description = '';
@@ -45,15 +45,15 @@ class UrlChecks
      */
     public function getUrlId()
     {
-        return $this->urlId;
+        return $this->url_id;
     }
 
     /**
      * @return $this
      */
-    public function setUrlId(int $urlId)
+    public function setUrlId(int $url_id)
     {
-        $this->urlId = $urlId;
+        $this->url_id = $url_id;
         return $this;
     }
 
@@ -62,15 +62,15 @@ class UrlChecks
      */
     public function getStatusCode()
     {
-        return $this->statusCode;
+        return $this->status_code;
     }
 
     /**
      * @return $this
      */
-    public function setStatusCode(int $statusCode)
+    public function setStatusCode(int $status_code)
     {
-        $this->statusCode = $statusCode;
+        $this->status_code = $status_code;
         return $this;
     }
 
@@ -160,11 +160,11 @@ class UrlChecks
 
         if (is_null($this->getId())) {
             $sql = 'INSERT INTO ' . self::$tableName .
-             ' (url_id, statusCode, h1, title, description, created_at) VALUES ' .
-             '(:urlId, :statusCode, :h1, :title, :description, :createdAt)';
+                ' (url_id, status_code, h1, title, description, created_at) VALUES ' .
+                '(:url_id, :status_code, :h1, :title, :description, :createdAt)';
             $sqlParams = [
-                ':urlId' => $this->getUrlId(),
-                ':statusCode' => $this->getStatusCode(),
+                ':url_id' => $this->getUrlId(),
+                ':status_code' => $this->getStatusCode(),
                 ':h1' => $this->getH1(),
                 ':title' => $this->getTitle(),
                 ':description' => $this->getDescription(),
@@ -186,18 +186,18 @@ class UrlChecks
     /**
      * @return array<int, UrlChecks>|null
      */
-    public static function getAllByUrlId(int $urlId = 0)
+    public static function getAllByUrlId(int $url_id = 0)
     {
-        if ($urlId <= 0) {
+        if ($url_id <= 0) {
             throw new \Exception('Can\'t select url_checks because url_id = 0');
         }
 
         $pdo = Connection::get()->connect();
         $executor = new SQLExecutor($pdo);
 
-        $sql = 'SELECT * FROM ' . self::$tableName . ' WHERE url_id=:urlId  ORDER BY created_at DESC';
+        $sql = 'SELECT * FROM ' . self::$tableName . ' WHERE url_id=:url_id  ORDER BY created_at DESC';
         $sqlParams = [
-            ':urlId' => $urlId
+            ':url_id' => $url_id
         ];
 
         $selectedRows = $executor->select($sql, $sqlParams);
