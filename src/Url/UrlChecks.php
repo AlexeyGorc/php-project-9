@@ -9,8 +9,8 @@ use Hexlet\Code\Database\SQLExecutor;
 class UrlChecks
 {
     private ?int $id = null;
-    private ?int $urlId = null;
-    private ?int $statusCode = null;
+    private ?int $urlId;
+    private int $statusCode;
     private string $h1 = '';
     private string $title = '';
     private string $description = '';
