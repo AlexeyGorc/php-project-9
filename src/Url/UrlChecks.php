@@ -9,8 +9,8 @@ use Hexlet\Code\Database\SQLExecutor;
 class UrlChecks
 {
     private ?int $id;
-    private int $urlId;
-    private int $statusCode;
+    private ?int $url_id = ;
+    private ?int $statusCode = null;
     private string $h1 = '';
     private string $title = '';
     private string $description = '';
@@ -68,9 +68,9 @@ class UrlChecks
     /**
      * @return $this
      */
-    public function setStatusCode(int $status_Code)
+    public function setStatusCode(int $statusCode)
     {
-        $this->status_code = $status_code;
+        $this->statusCode = $statusCode;
         return $this;
     }
 
@@ -160,11 +160,11 @@ class UrlChecks
 
         if (is_null($this->getId())) {
             $sql = 'INSERT INTO ' . self::$tableName .
-             ' (url_id, status_code, h1, title, description, created_at) VALUES ' .
-             '(:urlId, :status_code, :h1, :title, :description, :createdAt)';
+             ' (url_id, statusCode, h1, title, description, created_at) VALUES ' .
+             '(:urlId, :statusCode, :h1, :title, :description, :createdAt)';
             $sqlParams = [
                 ':urlId' => $this->getUrlId(),
-                ':status_code' => $this->getStatusCode(),
+                ':statusCode' => $this->getStatusCode(),
                 ':h1' => $this->getH1(),
                 ':title' => $this->getTitle(),
                 ':description' => $this->getDescription(),
