@@ -9,12 +9,13 @@ use Hexlet\Code\Database\SQLExecutor;
 class Url
 {
     private string $name = '';
-    private ?int $id = null;
+    private ?int $id;
     private ?Carbon $createdAt = null;
     private static string $tableName = 'urls';
 
     public function __construct()
     {
+        $this->id = null;
         $this->createdAt = Carbon::now();
     }
 

@@ -8,9 +8,9 @@ use Hexlet\Code\Database\SQLExecutor;
 
 class UrlChecks
 {
-    private ?int $id = null;
-    private ?int $urlId;
-    private ?int $statusCode;
+    private ?int $id;
+    private int $urlId;
+    private int $statusCode;
     private string $h1 = '';
     private string $title = '';
     private string $description = '';
@@ -20,6 +20,7 @@ class UrlChecks
 
     public function __construct()
     {
+        $this->id = null;
         $this->createdAt = Carbon::now();
     }
 
@@ -67,9 +68,9 @@ class UrlChecks
     /**
      * @return $this
      */
-    public function setStatusCode(int $statusCode)
+    public function setStatusCode(int $status_Code)
     {
-        $this->statusCode = $statusCode;
+        $this->status_code = $status_code;
         return $this;
     }
 
@@ -84,9 +85,9 @@ class UrlChecks
     /**
      * @return $this
      */
-    public function setH1(string $value = '')
+    public function setH1(string $string = '')
     {
-        $this->h1 = $value;
+        $this->h1 = $string;
         return $this;
     }
 
@@ -160,10 +161,10 @@ class UrlChecks
         if (is_null($this->getId())) {
             $sql = 'INSERT INTO ' . self::$tableName .
              ' (url_id, status_code, h1, title, description, created_at) VALUES ' .
-             '(:urlId, :statusCode, :h1, :title, :description, :createdAt)';
+             '(:urlId, :status_code, :h1, :title, :description, :createdAt)';
             $sqlParams = [
                 ':urlId' => $this->getUrlId(),
-                ':statusCode' => $this->getStatusCode(),
+                ':status_code' => $this->getStatusCode(),
                 ':h1' => $this->getH1(),
                 ':title' => $this->getTitle(),
                 ':description' => $this->getDescription(),
@@ -185,14 +186,10 @@ class UrlChecks
     /**
      * @return array<int, UrlChecks>|null
      */
-    public static function getAllByUrlId(int $urlId = null)
+    public static function getAllByUrlId(int $urlId = 0)
     {
-        if (is_null($urlId)) {
-            throw new \Exception('Can\'t select url_checks because url_id is null');
-        }
-
         if ($urlId <= 0) {
-            return null;
+            throw new \Exception('Can\'t select url_checks because url_id = 0');
         }
 
         $pdo = Connection::get()->connect();
