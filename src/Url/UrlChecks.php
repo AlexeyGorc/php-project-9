@@ -185,10 +185,14 @@ class UrlChecks
     /**
      * @return array<int, UrlChecks>|null
      */
-    public static function getAllByUrlId(int $urlId = 0)
+    public static function getAllByUrlId(int $urlId = null)
     {
+        if (is_null($urlId)) {
+            throw new \Exception('Can\'t select url_checks because url_id is null');
+        }
+
         if ($urlId <= 0) {
-            throw new \Exception('Can\'t select url_checks because url_id = 0');
+            return null;
         }
 
         $pdo = Connection::get()->connect();
