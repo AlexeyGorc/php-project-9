@@ -20,7 +20,7 @@ $container = new Container();
 AppFactory::setContainer($container);
 
 $container->set('view', function () {
-    return Twig::create(__DIR__ . '/../templates'/*, ['cache' => '../cache']*/);
+    return Twig::create(__DIR__ . '/../templates');
 });
 
 $container->set('flash', function () {
@@ -131,8 +131,7 @@ $app->post('/urls/{id:[0-9]+}/checks', function ($request, $response, $args) use
 
     $urlId = 0;
     try {
-        $url = Url::byId($id);
-        $urlId = $url->getId();
+        $url = Url::byId($urlId);
     } catch (\Exception | \PDOException $e) {
         $this->get('flash')->addMessage('danger', $e->getMessage());
         return $response->withRedirect($router->urlFor('index'));
@@ -194,7 +193,6 @@ $app->post('/urls/{id:[0-9]+}/checks', function ($request, $response, $args) use
         $this->get('flash')->addMessage('danger', 'Что-то пошло не так');
         return $response->withRedirect($router->urlFor('index'));
     }
-
 
     if ($statusCode >= 400) {
         $this->get('flash')->addMessage('warning', 'Проверка была выполнена успешно, но сервер ответил с ошибкой ');

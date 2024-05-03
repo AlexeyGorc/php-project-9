@@ -8,9 +8,9 @@ use Hexlet\Code\Database\SQLExecutor;
 
 class UrlChecks
 {
-    private ?int $id;
-    private int $urlId;
-    private int $statusCode;
+    private ?int $id = null;
+    private int $urlId = 0;
+    private int $statusCode = 0;
     private string $h1 = '';
     private string $title = '';
     private string $description = '';
@@ -20,7 +20,6 @@ class UrlChecks
 
     public function __construct()
     {
-        $this->id = null;
         $this->createdAt = Carbon::now();
     }
 
@@ -85,9 +84,9 @@ class UrlChecks
     /**
      * @return $this
      */
-    public function setH1(string $string = '')
+    public function setH1(string $value = '')
     {
-        $this->h1 = $string;
+        $this->h1 = $value;
         return $this;
     }
 
