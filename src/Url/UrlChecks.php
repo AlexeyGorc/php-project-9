@@ -130,6 +130,9 @@ class UrlChecks
         return $this;
     }
 
+    /**
+     * @param Carbon|string $createdAt
+     */
     public function setCreatedAt($createdAt): void
     {
         if ($createdAt instanceof Carbon) {

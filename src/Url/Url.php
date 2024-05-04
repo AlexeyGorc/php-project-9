@@ -53,6 +53,9 @@ class Url
         $this->id = $id;
     }
 
+    /**
+     * @param Carbon|string $createdAt
+     */
     public function setCreatedAt($createdAt): void
     {
         if ($createdAt instanceof Carbon) {
