@@ -37,18 +37,18 @@
             </tr>
         </thead>
         <tbody>
-            {% if url.getAllChecks|length > 0 %}
-                {% for urlCheck in url.getAllChecks %}
-                <tr>
-                    <td>{{ urlCheck.getId }}</td>
-                    <td>{{ urlCheck.getStatusCode }}</td>
-                    <td>{{ urlCheck.getH1 }}</td>
-                    <td>{{ urlCheck.getTitle }}</td>
-                    <td>{{ urlCheck.getDescription }}</td>
-                    <td>{{ urlCheck.getCreatedAt }}</td>
-                </tr>
-                {% endfor %}
-            {% endif %}
+        {% if url.getAllChecks is not null %}
+        {% for urlCheck in url.getAllChecks %}
+            <tr>
+                <td>{{ urlCheck.getId }}</td>
+                <td>{{ urlCheck.getStatusCode|default(0) }}</td>
+                <td>{{ urlCheck.getH1 }}</td>
+                <td>{{ urlCheck.getTitle }}</td>
+                <td>{{ urlCheck.getDescription }}</td>
+                <td>{{ urlCheck.getCreatedAt }}</td>
+            </tr>
+        {% endfor %}
+        {% endif %}
         </tbody>
     </table>
 {% endblock %}

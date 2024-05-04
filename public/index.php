@@ -20,7 +20,7 @@ $container = new Container();
 AppFactory::setContainer($container);
 
 $container->set('view', function () {
-    return Twig::create(__DIR__ . '/../templates'/*, ['cache' => '../cache']*/);
+    return Twig::create(__DIR__ . '/../templates');
 });
 
 $container->set('flash', function () {
@@ -129,23 +129,16 @@ $app->get('/urls/{id:[0-9]+}', function ($request, $response, $args) use ($route
 $app->post('/urls/{id:[0-9]+}/checks', function ($request, $response, $args) use ($router) {
     $id = $args['id'];
 
-    $urlId = 0;
-    try {
-        $url = Url::byId($id);
-        $urlId = $url->getId();
-    } catch (\Exception | \PDOException $e) {
-        $this->get('flash')->addMessage('danger', $e->getMessage());
-        return $response->withRedirect($router->urlFor('index'));
-    }
-
-    if ($urlId <= 0) {
-        $this->get('flash')->addMessage('danger', 'Что-то пошло не так');
-        return $response->withRedirect($router->urlFor('index'));
-    }
-
     $statusCode = null;
     $responseBody = '';
     try {
+        $url = Url::byId($id);
+
+        if ($url->getId() === null) {
+            $this->get('flash')->addMessage('danger', 'URL с указанным идентификатором не найден');
+            return $response->withRedirect($router->urlFor('index'));
+        }
+
         $guzzleClient = new Client();
         $guzzleResponse = $guzzleClient->request('GET', $url->getName(), ['connect_timeout' => 3]);
         $statusCode = $guzzleResponse->getStatusCode();
@@ -154,8 +147,8 @@ $app->post('/urls/{id:[0-9]+}/checks', function ($request, $response, $args) use
         $statusCode = $e->getCode();
 
         if (!$statusCode) {
-            $this->get('flash')->addMessage('danger', 'Произошла ошибка при проверке, не удалось подключиться ');
-            return $response->withRedirect($router->urlFor('url.show', ['id' => (string)$urlId]));
+            $this->get('flash')->addMessage('danger', 'Произошла ошибка при проверке, не удалось подключиться');
+            return $response->withRedirect($router->urlFor('url.show', ['id' => $id]));
         }
     } catch (RequestException $e) {
         $statusCode = $e->getCode();
@@ -170,20 +163,18 @@ $app->post('/urls/{id:[0-9]+}/checks', function ($request, $response, $args) use
     }
 
     if (!$statusCode) {
-        $this->get('flash')->addMessage('danger', 'Произошла ошибка при проверке, не удалось подключиться ');
-        return $response->withRedirect($router->urlFor('url.show', ['id' => (string)$urlId]));
+        $this->get('flash')->addMessage('danger', 'Произошла ошибка при проверке, не удалось подключиться');
+        return $response->withRedirect($router->urlFor('url.show', ['id' => $id]));
     }
-
 
     $document = new Document($responseBody);
     $documentTitle = optional($document->first('title'))->text() ?? '';
     $documentH1 = optional($document->first('h1'))->text() ?? '';
     $documentDescription = optional($document->first('meta[name="description"]'))->attr('content') ?? '';
 
-    $urlCheckId = 0;
     try {
         $urlCheck = new UrlChecks();
-        $urlCheckId = $urlCheck->setUrlId($urlId)->setStatusCode((int)$statusCode)->setH1($documentH1)
+        $urlCheckId = $urlCheck->setUrlId($id)->setStatusCode((int)$statusCode)->setH1($documentH1)
             ->setTitle($documentTitle)->setDescription($documentDescription)->store()->getId();
     } catch (\Exception | \PDOException $e) {
         $this->get('flash')->addMessage('danger', $e->getMessage());
@@ -195,14 +186,13 @@ $app->post('/urls/{id:[0-9]+}/checks', function ($request, $response, $args) use
         return $response->withRedirect($router->urlFor('index'));
     }
 
-
     if ($statusCode >= 400) {
-        $this->get('flash')->addMessage('warning', 'Проверка была выполнена успешно, но сервер ответил с ошибкой ');
+        $this->get('flash')->addMessage('warning', 'Проверка была выполнена успешно, но сервер ответил с ошибкой');
     } else {
         $this->get('flash')->addMessage('success', 'Страница успешно проверена');
     }
 
-    return $response->withRedirect($router->urlFor('url.show', ['id' => (string)$urlId]));
+    return $response->withRedirect($router->urlFor('url.show', ['id' => $id]));
 })->setName('url.check');
 
 $app->run();

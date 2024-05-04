@@ -9,18 +9,23 @@ use Hexlet\Code\Database\SQLExecutor;
 class UrlChecks
 {
     private ?int $id;
-    private int $url_id;
-    private int $status_code;
-    private string $h1 = '';
-    private string $title = '';
-    private string $description = '';
-    private ?Carbon $createdAt = null;
+    private int $urlId;
+    private int $statusCode;
+    private string $h1;
+    private string $title;
+    private string $description;
+    private ?Carbon $createdAt;
 
     private static string $tableName = 'url_checks';
 
     public function __construct()
     {
         $this->id = null;
+        $this->urlId = 0;
+        $this->statusCode = 0;
+        $this->h1 = '';
+        $this->title = '';
+        $this->description = '';
         $this->createdAt = Carbon::now();
     }
 
@@ -45,32 +50,32 @@ class UrlChecks
      */
     public function getUrlId()
     {
-        return $this->url_id;
+        return $this->urlId;
     }
 
     /**
      * @return $this
      */
-    public function setUrlId(int $url_id)
+    public function setUrlId(int $urlId)
     {
-        $this->url_id = $url_id;
+        $this->urlId = $urlId;
         return $this;
     }
 
     /**
-     * @return string
+     * @return int
      */
-    public function getStatusCode()
+    public function getStatusCode(): int
     {
-        return $this->status_code;
+        return $this->statusCode;
     }
 
     /**
      * @return $this
      */
-    public function setStatusCode(int $status_code)
+    public function setStatusCode(int $code = 0)
     {
-        $this->status_code = $status_code;
+        $this->statusCode = $code;
         return $this;
     }
 
@@ -85,9 +90,9 @@ class UrlChecks
     /**
      * @return $this
      */
-    public function setH1(string $string = '')
+    public function setH1(string $value = '')
     {
-        $this->h1 = $string;
+        $this->h1 = $value;
         return $this;
     }
 
@@ -125,8 +130,17 @@ class UrlChecks
         return $this;
     }
 
+    public function setCreatedAt($createdAt): void
+    {
+        if ($createdAt instanceof Carbon) {
+            $this->createdAt = $createdAt;
+        } else {
+            $this->createdAt = Carbon::parse($createdAt);
+        }
+    }
+
     /**
-     * @return Carbon|null
+     * @return Carbon
      */
     public function getCreatedAt(): ?Carbon
     {
@@ -182,7 +196,6 @@ class UrlChecks
         return $this;
     }
 
-
     /**
      * @return array<int, UrlChecks>|null
      */
@@ -226,7 +239,13 @@ class UrlChecks
         }
 
         foreach ($fields as $key => $value) {
-            $url->setField($key, (string)$value);
+            if ($key === 'created_at') {
+                $url->setCreatedAt($value);
+            } elseif ($key === 'status_code') {
+                $url->setStatusCode((int)$value);
+            } else {
+                $url->setField($key, (string)$value);
+            }
         }
 
         return $url;

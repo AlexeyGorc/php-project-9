@@ -8,13 +8,14 @@ use Hexlet\Code\Database\SQLExecutor;
 
 class Url
 {
-    private string $name = '';
+    private string $name;
     private ?int $id;
-    private ?Carbon $createdAt = null;
+    private ?Carbon $createdAt;
     private static string $tableName = 'urls';
 
     public function __construct()
     {
+        $this->name = '';
         $this->id = null;
         $this->createdAt = Carbon::now();
     }
@@ -50,6 +51,15 @@ class Url
     public function setId(int $id)
     {
         $this->id = $id;
+    }
+
+    public function setCreatedAt($createdAt): void
+    {
+        if ($createdAt instanceof Carbon) {
+            $this->createdAt = $createdAt;
+        } else {
+            $this->createdAt = Carbon::parse($createdAt);
+        }
     }
 
     /**
@@ -213,7 +223,11 @@ class Url
         }
 
         foreach ($fields as $key => $value) {
-            $url->setField($key, $value);
+            if ($key === 'created_at') {
+                $url->setCreatedAt($value); // Установка значения createdAt
+            } else {
+                $url->setField($key, $value);
+            }
         }
 
         return $url;
