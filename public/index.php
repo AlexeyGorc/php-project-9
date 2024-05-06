@@ -50,7 +50,7 @@ $customErrorHandler = function (
 };
 
 $errorMiddleware = $app->addErrorMiddleware(true, true, true);
-$errorMiddleware->setDefaultErrorHandler($customErrorHandler);
+$errorMiddleware->setDefaultErrorHandler($customErrorHandler, true, true);
 
 $app->add(TwigMiddleware::createFromContainer($app));
 
