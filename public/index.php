@@ -42,7 +42,7 @@ $customErrorHandler = function (
 
     if ($exception instanceof \PDOException) {
         $this->get('flash')->addMessage('danger', $exception->getMessage());
-        return $response->withRedirect($router->urlFor('index'));
+        return $response->withHeader('Location', $router->urlFor('index'))->withStatus(302);
     }
 
     $response->getBody()->write($exception->getMessage());
