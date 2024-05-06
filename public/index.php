@@ -34,21 +34,24 @@ $customErrorHandler = function (
     \Throwable $exception,
     bool $displayErrorDetail,
     bool $logErrors,
-    bool $logErrorDetails
+    bool $logErrorDetails,
+    \Psr\Http\Message\ResponseFactoryInterface $responseFactory
 ) use ($app) {
+    $response = $app->getResponseFactory()->createResponse();
+    $router = $app->getRouteCollector()->getRouteParser();
+
     if ($exception instanceof \PDOException) {
         $this->get('flash')->addMessage('danger', $exception->getMessage());
         return $response->withRedirect($router->urlFor('index'));
     }
 
-    $response = $app->getResponseFactory()->createResponse();
     $response->getBody()->write($exception->getMessage());
 
     return $response;
 };
 
 $errorMiddleware = $app->addErrorMiddleware(true, true, true);
-$errorMiddleware->setDefaultErrorHandler($customErrorHandler, true, true);
+$errorMiddleware->setDefaultErrorHandler($customErrorHandler);
 
 $app->add(TwigMiddleware::createFromContainer($app));
 
