@@ -117,7 +117,8 @@ class Url
             throw new \Exception('Can\'t store new url because have no url name');
         }
 
-        $pdo = Connection::get()->connect();
+        $connection = new Connection();
+        $pdo = $connection->get();
         $executor = new SQLExecutor($pdo);
 
         if (is_null($this->getId())) {
@@ -148,7 +149,8 @@ class Url
             throw new \Exception('Can\'t select url because have no url name');
         }
 
-        $pdo = Connection::get()->connect();
+        $connection = new Connection();
+        $pdo = $connection->get();
         $executor = new SQLExecutor($pdo);
 
         $sql = 'SELECT * FROM ' . self::$tableName . ' WHERE name=:name LIMIT 1';
@@ -171,7 +173,8 @@ class Url
             throw new \Exception('Can\'t select url because id = 0');
         }
 
-        $pdo = Connection::get()->connect();
+        $connection = new Connection();
+        $pdo = $connection->get();
         $executor = new SQLExecutor($pdo);
 
         $sql = 'SELECT * FROM ' . self::$tableName . ' WHERE id=:id';
@@ -194,7 +197,8 @@ class Url
      */
     public static function getAll()
     {
-        $pdo = Connection::get()->connect();
+        $connection = new Connection();
+        $pdo = $connection->get();
         $executor = new SQLExecutor($pdo);
 
         $sql = 'SELECT * FROM ' . self::$tableName . ' ORDER BY created_at DESC';

@@ -172,7 +172,8 @@ class UrlChecks
             throw new \Exception('Can\'t store new url_check because have no url_id');
         }
 
-        $pdo = Connection::get()->connect();
+        $connection = new Connection();
+        $pdo = $connection->get();
         $executor = new SQLExecutor($pdo);
 
         if (is_null($this->getId())) {
@@ -208,7 +209,8 @@ class UrlChecks
             throw new \Exception('Can\'t select url_checks because url_id = 0');
         }
 
-        $pdo = Connection::get()->connect();
+        $connection = new Connection();
+        $pdo = $connection->get();
         $executor = new SQLExecutor($pdo);
 
         $sql = 'SELECT * FROM ' . self::$tableName . ' WHERE url_id=:url_id  ORDER BY created_at DESC';
