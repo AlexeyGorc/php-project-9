@@ -117,11 +117,6 @@ class Url
             throw new \Exception('Can\'t store new url because have no url name');
         }
 
-        $existingUrl = self::byName($this->getName());
-        if ($existingUrl->getId() !== null) {
-            return $existingUrl;
-        }
-
         $pdo = Connection::get()->connect();
         $executor = new SQLExecutor($pdo);
 
@@ -147,7 +142,7 @@ class Url
      * @return Url
      * @throws \Exception
      */
-    public static function byName(string $name = '')
+    public static function findOrCreate(string $name = '')
     {
         if (trim($name) == '') {
             throw new \Exception('Can\'t select url because have no url name');
@@ -170,7 +165,7 @@ class Url
      * @return Url
      * @throws \Exception
      */
-    public static function byId(int $id = 0)
+    public static function findById(int $id = 0)
     {
         if ($id <= 0) {
             throw new \Exception('Can\'t select url because id = 0');
@@ -187,6 +182,11 @@ class Url
         $return = $executor->select($sql, $sqlParams);
 
         return (!$return) ? self::create([]) : self::create(reset($return));
+    }
+
+    public function exists(): bool
+    {
+        return !is_null($this->getId());
     }
 
     /**
@@ -227,7 +227,7 @@ class Url
 
         foreach ($fields as $key => $value) {
             if ($key === 'created_at') {
-                $url->setCreatedAt($value); // Установка значения createdAt
+                $url->setCreatedAt($value);
             } else {
                 $url->setField($key, $value);
             }

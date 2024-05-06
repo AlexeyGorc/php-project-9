@@ -124,7 +124,7 @@ class UrlChecks
     /**
      * @return $this
      */
-    public function setDescription(string $string = '')
+    public function setDescription(string $string)
     {
         $this->description = $string;
         return $this;

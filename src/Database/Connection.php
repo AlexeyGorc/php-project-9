@@ -15,7 +15,7 @@ class Connection
      * @return \PDO
      * @throws \Exception
      */
-    public function connect()
+    public function connect(): \PDO
     {
         if (getenv('DATABASE_URL')) {
             $databaseUrl = parse_url(getenv('DATABASE_URL'));
@@ -52,16 +52,8 @@ class Connection
     /**
      * @return Connection
      */
-    public static function get()
+    public static function get(): Connection
     {
-        if (is_null(self::$conn)) {
-            self::$conn = new self();
-        }
-
-        return self::$conn;
-    }
-
-    protected function __construct()
-    {
+        return new self();
     }
 }

@@ -28,7 +28,27 @@ $container->set('flash', function () {
 });
 
 $app = AppFactory::create();
-$app->addErrorMiddleware(true, true, true);
+
+$customErrorHandler = function (
+    \Psr\Http\Message\ServerRequestInterface $request,
+    \Throwable $exception,
+    bool $displayErrorDetail,
+    bool $logErrors,
+    bool $logErrorDetails
+) use ($app) {
+    if ($exception instanceof \PDOException) {
+        $this->get('flash')->addMessage('danger', $exception->getMessage());
+        return $response->withRedirect($router->urlFor('index'));
+    }
+
+    $response = $app->getResponseFactory()->createResponse();
+    $response->getBody()->write($exception->getMessage());
+
+    return $response;
+};
+
+$errorMiddleware = $app->addErrorMiddleware(true, true, true);
+$errorMiddleware->setDefaultErrorHandler($customErrorHandler);
 
 $app->add(TwigMiddleware::createFromContainer($app));
 
@@ -45,12 +65,7 @@ $app->get('/', function ($request, $response) use ($router) {
 })->setName('index');
 
 $app->get('/urls', function ($request, $response) use ($router) {
-    try {
-        $urls = Url::getAll();
-    } catch (\Exception | \PDOException $e) {
-        $this->get('flash')->addMessage('danger', $e->getMessage());
-        return $response->withRedirect($router->urlFor('index'));
-    }
+    $urls = Url::getAll();
 
     $params = [
         'router' => $router,
@@ -78,19 +93,14 @@ $app->post('/urls', function ($request, $response) use ($router) {
         return $this->get('view')->render($response->withStatus(422), 'index.twig', $params);
     }
 
-    try {
-        $url = Url::byName($parsedUrl);
+    $url = Url::findOrCreate($parsedUrl);
 
-        if ($url->getId() > 0) {
-            $this->get('flash')->addMessage('success', 'Страница уже существует');
-            return $response->withRedirect($router->urlFor('url.show', ['id' => (string)$url->getId()]));
-        }
-
-        $urlId = $url->setName($parsedUrl)->store()->getId();
-    } catch (\Exception | \PDOException $e) {
-        $this->get('flash')->addMessage('danger', $e->getMessage());
-        return $response->withRedirect($router->urlFor('index'));
+    if ($url->exists()) {
+        $this->get('flash')->addMessage('success', 'Страница уже существует');
+        return $response->withRedirect($router->urlFor('url.show', ['id' => (string)$url->getId()]));
     }
+
+    $urlId = $url->setName($parsedUrl)->store()->getId();
 
     if ($urlId <= 0) {
         $this->get('flash')->addMessage('danger', 'Что-то пошло не так');
@@ -105,15 +115,10 @@ $app->post('/urls', function ($request, $response) use ($router) {
 $app->get('/urls/{id:[0-9]+}', function ($request, $response, $args) use ($router) {
     $id = $args['id'];
 
-    try {
-        $url = Url::byId($id);
+    $url = Url::findById($id);
 
-        if (!$url->getId()) {
-            return $this->get('view')->render($response->withStatus(404), 'error404.twig');
-        }
-    } catch (\Exception | \PDOException $e) {
-        $this->get('flash')->addMessage('danger', $e->getMessage());
-        return $response->withRedirect($router->urlFor('index'));
+    if (!$url->getId()) {
+        return $this->get('view')->render($response->withStatus(404), 'error404.twig');
     }
 
     $messages = $this->get('flash')->getMessages();
@@ -131,28 +136,30 @@ $app->post('/urls/{id:[0-9]+}/checks', function ($request, $response, $args) use
 
     $statusCode = null;
     $responseBody = '';
+    $url = Url::findById($id);
+
+    if ($url->getId() === null) {
+        $this->get('flash')->addMessage('danger', 'URL с указанным идентификатором не найден');
+        return $response->withRedirect($router->urlFor('index'));
+    }
+
     try {
-        $url = Url::byId($id);
-
-        if ($url->getId() === null) {
-            $this->get('flash')->addMessage('danger', 'URL с указанным идентификатором не найден');
-            return $response->withRedirect($router->urlFor('index'));
-        }
-
         $guzzleClient = new Client();
         $guzzleResponse = $guzzleClient->request('GET', $url->getName(), ['connect_timeout' => 3]);
-        $statusCode = $guzzleResponse->getStatusCode();
-        $responseBody = (string) $guzzleResponse->getBody();
+        if ($guzzleResponse->getStatusCode()) {
+            $statusCode = $guzzleResponse->getStatusCode();
+            $responseBody = (string) $guzzleResponse->getBody();
+        } else {
+            throw new \RuntimeException('Empty Guzzle response');
+        }
     } catch (ConnectException $e) {
         $statusCode = $e->getCode();
-
         if (!$statusCode) {
             $this->get('flash')->addMessage('danger', 'Произошла ошибка при проверке, не удалось подключиться');
             return $response->withRedirect($router->urlFor('url.show', ['id' => $id]));
         }
     } catch (RequestException $e) {
         $statusCode = $e->getCode();
-
         if ($e->hasResponse()) {
             $guzzleResponse = $e->getResponse();
             if ($guzzleResponse instanceof \Psr\Http\Message\ResponseInterface) {
@@ -160,10 +167,13 @@ $app->post('/urls/{id:[0-9]+}/checks', function ($request, $response, $args) use
                 $responseBody = (string) $guzzleResponse->getBody();
             }
         }
+    } catch (\RuntimeException $e) {
+        $this->get('flash')->addMessage('danger', $e->getMessage());
+        return $response->withRedirect($router->urlFor('url.show', ['id' => $id]));
     }
 
-    if (!$statusCode) {
-        $this->get('flash')->addMessage('danger', 'Произошла ошибка при проверке, не удалось подключиться');
+    if (empty($responseBody)) {
+        $this->get('flash')->addMessage('danger', 'Пустой HTML-код');
         return $response->withRedirect($router->urlFor('url.show', ['id' => $id]));
     }
 
@@ -172,14 +182,14 @@ $app->post('/urls/{id:[0-9]+}/checks', function ($request, $response, $args) use
     $documentH1 = optional($document->first('h1'))->text() ?? '';
     $documentDescription = optional($document->first('meta[name="description"]'))->attr('content') ?? '';
 
-    try {
-        $urlCheck = new UrlChecks();
-        $urlCheckId = $urlCheck->setUrlId($id)->setStatusCode((int)$statusCode)->setH1($documentH1)
-            ->setTitle($documentTitle)->setDescription($documentDescription)->store()->getId();
-    } catch (\Exception | \PDOException $e) {
-        $this->get('flash')->addMessage('danger', $e->getMessage());
-        return $response->withRedirect($router->urlFor('index'));
+    if (!$statusCode) {
+        $this->get('flash')->addMessage('danger', 'Произошла ошибка при проверке, не удалось подключиться');
+        return $response->withRedirect($router->urlFor('url.show', ['id' => $id]));
     }
+
+    $urlCheck = new UrlChecks();
+    $urlCheckId = $urlCheck->setUrlId($id)->setStatusCode((int)$statusCode)->setH1($documentH1)
+        ->setTitle($documentTitle)->setDescription($documentDescription)->store()->getId();
 
     if ($urlCheckId <= 0) {
         $this->get('flash')->addMessage('danger', 'Что-то пошло не так');
