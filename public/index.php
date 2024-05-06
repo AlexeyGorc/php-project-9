@@ -34,7 +34,9 @@ $customErrorHandler = function (
     \Throwable $exception,
     bool $displayErrorDetail,
     bool $logErrors,
-    bool $logErrorDetails
+    bool $logErrorDetails,
+    $response,
+    $router
 ) use ($app) {
     if ($exception instanceof \PDOException) {
         $this->get('flash')->addMessage('danger', $exception->getMessage());

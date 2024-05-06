@@ -4,18 +4,19 @@ namespace Hexlet\Code\Database;
 
 class Connection
 {
-    /**
-     * Connection
-     * тип @var
-     */
-    private static ?Connection $conn = null;
+    private \PDO $pdo;
+
+    public function __construct()
+    {
+        $this->pdo = $this->connect();
+    }
 
     /**
      * Подключение к базе данных и возврат экземпляра объекта \PDO
      * @return \PDO
      * @throws \Exception
      */
-    public function connect(): \PDO
+    private function connect(): \PDO
     {
         if (getenv('DATABASE_URL')) {
             $databaseUrl = parse_url(getenv('DATABASE_URL'));
@@ -50,10 +51,11 @@ class Connection
     }
 
     /**
-     * @return Connection
+     * Получить экземпляр подключения к базе данных
+     * @return \PDO
      */
-    public static function get(): Connection
+    public function get(): \PDO
     {
-        return new self();
+        return $this->pdo;
     }
 }
