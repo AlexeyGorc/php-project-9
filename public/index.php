@@ -138,6 +138,8 @@ $app->post('/urls/{id:[0-9]+}/checks', function ($request, $response, $args) use
         return $response->withRedirect($router->urlFor('index'));
     }
 
+    $responseBody = null;
+
     try {
         $guzzleClient = new Client(['connect_timeout' => 3]);
         $guzzleResponse = $guzzleClient->request('GET', $url->getName());

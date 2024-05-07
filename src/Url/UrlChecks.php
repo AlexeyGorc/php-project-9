@@ -90,7 +90,7 @@ class UrlChecks
     /**
      * @return $this
      */
-    public function setH1($value = '')
+    public function setH1(string $value = '')
     {
         $this->h1 = $value;
         return $this;
@@ -107,7 +107,7 @@ class UrlChecks
     /**
      * @return $this
      */
-    public function setTitle($string)
+    public function setTitle(string $string)
     {
         $this->title = $string;
         return $this;
@@ -124,7 +124,7 @@ class UrlChecks
     /**
      * @return $this
      */
-    public function setDescription($string)
+    public function setDescription(string $string)
     {
         $this->description = $string;
         return $this;
