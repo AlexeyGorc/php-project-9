@@ -13,7 +13,7 @@
             </tr>
         </thead>
             <tbody>
-            {% if urls|length > 0 %}
+            {% if urls is not empty %}
                 {% for url in urls %}
                 <tr>
                     <td>{{ url.getId }}</td>

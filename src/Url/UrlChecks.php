@@ -11,9 +11,9 @@ class UrlChecks
     private ?int $id;
     private int $urlId;
     private int $statusCode;
-    private string $h1;
-    private string $title;
-    private string $description;
+    private ?string $h1;
+    private ?string $title;
+    private ?string $description;
     private ?Carbon $createdAt;
 
     private static string $tableName = 'url_checks';
@@ -90,7 +90,7 @@ class UrlChecks
     /**
      * @return $this
      */
-    public function setH1(string $value = '')
+    public function setH1($value = '')
     {
         $this->h1 = $value;
         return $this;
@@ -107,7 +107,7 @@ class UrlChecks
     /**
      * @return $this
      */
-    public function setTitle(string $string = '')
+    public function setTitle($string)
     {
         $this->title = $string;
         return $this;
@@ -124,7 +124,7 @@ class UrlChecks
     /**
      * @return $this
      */
-    public function setDescription(string $string)
+    public function setDescription($string)
     {
         $this->description = $string;
         return $this;
@@ -172,8 +172,7 @@ class UrlChecks
             throw new \Exception('Can\'t store new url_check because have no url_id');
         }
 
-        $connection = new Connection();
-        $pdo = $connection->get();
+        $pdo = (new Connection())->get();
         $executor = new SQLExecutor($pdo);
 
         if (is_null($this->getId())) {
@@ -209,8 +208,7 @@ class UrlChecks
             throw new \Exception('Can\'t select url_checks because url_id = 0');
         }
 
-        $connection = new Connection();
-        $pdo = $connection->get();
+        $pdo = (new Connection())->get();
         $executor = new SQLExecutor($pdo);
 
         $sql = 'SELECT * FROM ' . self::$tableName . ' WHERE url_id=:url_id  ORDER BY created_at DESC';

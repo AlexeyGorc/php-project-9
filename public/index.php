@@ -34,8 +34,7 @@ $customErrorHandler = function (
     \Throwable $exception,
     bool $displayErrorDetail,
     bool $logErrors,
-    bool $logErrorDetails,
-    \Psr\Http\Message\ResponseFactoryInterface $responseFactory
+    bool $logErrorDetails
 ) use ($app) {
     $response = $app->getResponseFactory()->createResponse();
     $router = $app->getRouteCollector()->getRouteParser();
@@ -105,11 +104,6 @@ $app->post('/urls', function ($request, $response) use ($router) {
 
     $urlId = $url->setName($parsedUrl)->store()->getId();
 
-    if ($urlId <= 0) {
-        $this->get('flash')->addMessage('danger', 'Что-то пошло не так');
-        return $response->withRedirect($router->urlFor('index'));
-    }
-
     $this->get('flash')->addMessage('success', 'Страница успешно добавлена');
 
     return $response->withRedirect($router->urlFor('url.show', ['id' => (string)$urlId]));
@@ -137,8 +131,6 @@ $app->get('/urls/{id:[0-9]+}', function ($request, $response, $args) use ($route
 $app->post('/urls/{id:[0-9]+}/checks', function ($request, $response, $args) use ($router) {
     $id = $args['id'];
 
-    $statusCode = null;
-    $responseBody = '';
     $url = Url::findById($id);
 
     if ($url->getId() === null) {
@@ -147,14 +139,11 @@ $app->post('/urls/{id:[0-9]+}/checks', function ($request, $response, $args) use
     }
 
     try {
-        $guzzleClient = new Client();
-        $guzzleResponse = $guzzleClient->request('GET', $url->getName(), ['connect_timeout' => 3]);
-        if ($guzzleResponse->getStatusCode()) {
-            $statusCode = $guzzleResponse->getStatusCode();
-            $responseBody = (string) $guzzleResponse->getBody();
-        } else {
-            throw new \RuntimeException('Empty Guzzle response');
-        }
+        $guzzleClient = new Client(['connect_timeout' => 3]);
+        $guzzleResponse = $guzzleClient->request('GET', $url->getName());
+        $guzzleResponse->getStatusCode();
+        $statusCode = $guzzleResponse->getStatusCode();
+        $responseBody = (string) $guzzleResponse->getBody();
     } catch (ConnectException $e) {
         $statusCode = $e->getCode();
         if (!$statusCode) {
@@ -175,15 +164,10 @@ $app->post('/urls/{id:[0-9]+}/checks', function ($request, $response, $args) use
         return $response->withRedirect($router->urlFor('url.show', ['id' => $id]));
     }
 
-    if (empty($responseBody)) {
-        $this->get('flash')->addMessage('danger', 'Пустой HTML-код');
-        return $response->withRedirect($router->urlFor('url.show', ['id' => $id]));
-    }
-
     $document = new Document($responseBody);
-    $documentTitle = optional($document->first('title'))->text() ?? '';
-    $documentH1 = optional($document->first('h1'))->text() ?? '';
-    $documentDescription = optional($document->first('meta[name="description"]'))->attr('content') ?? '';
+    $documentTitle = optional($document->first('title'))->text();
+    $documentH1 = optional($document->first('h1'))->text();
+    $documentDescription = optional($document->first('meta[name="description"]'))->attr('content');
 
     if (!$statusCode) {
         $this->get('flash')->addMessage('danger', 'Произошла ошибка при проверке, не удалось подключиться');

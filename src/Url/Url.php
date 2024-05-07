@@ -8,7 +8,7 @@ use Hexlet\Code\Database\SQLExecutor;
 
 class Url
 {
-    private string $name;
+    private ?string $name;
     private ?int $id;
     private ?Carbon $createdAt;
     private static string $tableName = 'urls';
@@ -48,7 +48,7 @@ class Url
     /**
      * @return void
      */
-    public function setId(int $id)
+    public function setId(int $id): void
     {
         $this->id = $id;
     }
@@ -74,16 +74,6 @@ class Url
     }
 
     /**
-     * @return void
-     */
-    private function setField(string $name, string $value)
-    {
-        if (property_exists($this, $name)) {
-            $this->$name = $value;
-        }
-    }
-
-    /**
      * @return array<int, UrlChecks>|null
      */
     public function getAllChecks()
@@ -104,7 +94,7 @@ class Url
     {
         $urlChecks = $this->getAllChecks();
 
-        return (!$urlChecks) ? null : reset($urlChecks);
+        return (!$urlChecks) ? null : array_pop($urlChecks);
     }
 
     /**
@@ -113,12 +103,7 @@ class Url
      */
     public function store()
     {
-        if ($this->getName() == '') {
-            throw new \Exception('Can\'t store new url because have no url name');
-        }
-
-        $connection = new Connection();
-        $pdo = $connection->get();
+        $pdo = (new Connection())->get();
         $executor = new SQLExecutor($pdo);
 
         if (is_null($this->getId())) {
@@ -149,8 +134,7 @@ class Url
             throw new \Exception('Can\'t select url because have no url name');
         }
 
-        $connection = new Connection();
-        $pdo = $connection->get();
+        $pdo = (new Connection())->get();
         $executor = new SQLExecutor($pdo);
 
         $sql = 'SELECT * FROM ' . self::$tableName . ' WHERE name=:name LIMIT 1';
@@ -160,7 +144,7 @@ class Url
 
         $return = $executor->select($sql, $sqlParams);
 
-        return (!$return) ? self::create([]) : self::create(reset($return));
+        return (!$return) ? self::createFromDatabaseRow([]) : self::createFromDatabaseRow(reset($return));
     }
 
     /**
@@ -173,8 +157,7 @@ class Url
             throw new \Exception('Can\'t select url because id = 0');
         }
 
-        $connection = new Connection();
-        $pdo = $connection->get();
+        $pdo = (new Connection())->get();
         $executor = new SQLExecutor($pdo);
 
         $sql = 'SELECT * FROM ' . self::$tableName . ' WHERE id=:id';
@@ -184,7 +167,7 @@ class Url
 
         $return = $executor->select($sql, $sqlParams);
 
-        return (!$return) ? self::create([]) : self::create(reset($return));
+        return (!$return) ? self::createFromDatabaseRow([]) : self::createFromDatabaseRow(reset($return));
     }
 
     public function exists(): bool
@@ -197,8 +180,7 @@ class Url
      */
     public static function getAll()
     {
-        $connection = new Connection();
-        $pdo = $connection->get();
+        $pdo = (new Connection())->get();
         $executor = new SQLExecutor($pdo);
 
         $sql = 'SELECT * FROM ' . self::$tableName . ' ORDER BY created_at DESC';
@@ -211,7 +193,7 @@ class Url
         }
 
         $returnUrls = array_map(function ($row) {
-            return self::create($row);
+            return self::createFromDatabaseRow($row);
         }, $selectedRows);
 
         return $returnUrls;
@@ -221,21 +203,13 @@ class Url
      * @param array<string, string> $fields
      * @return Url
      */
-    private static function create($fields)
+    private static function createFromDatabaseRow(array $fields): Url
     {
         $url = new self();
 
-        if (count($fields) <= 0) {
-            return $url;
-        }
-
-        foreach ($fields as $key => $value) {
-            if ($key === 'created_at') {
-                $url->setCreatedAt($value);
-            } else {
-                $url->setField($key, $value);
-            }
-        }
+        $url->id = $fields['id'] ?? null;
+        $url->name = $fields['name'] ?? null;
+        $url->createdAt = isset($fields['created_at']) ? Carbon::parse($fields['created_at']) : null;
 
         return $url;
     }
