@@ -208,7 +208,7 @@ class Url
     {
         $url = new self();
 
-        $url->id = $fields['id'] ?? null;
+        $url->id = isset($fields['id']) ? (int)$fields['id'] : null;
         $url->name = $fields['name'] ?? null;
         $url->createdAt = isset($fields['created_at']) ? Carbon::parse($fields['created_at']) : null;
 
