@@ -10,7 +10,7 @@ class UrlCheck
 {
     private ?int $id;
     private int $urlId;
-    private int $statusCode;
+    private ?int $statusCode;
     private ?string $h1;
     private ?string $title;
     private ?string $description;
@@ -73,7 +73,7 @@ class UrlCheck
     /**
      * @return $this
      */
-    public function setStatusCode(int $code = 0)
+    public function setStatusCode(?int $code = null)
     {
         $this->statusCode = $code;
         return $this;
@@ -148,18 +148,6 @@ class UrlCheck
     public function getCreatedAt(): ?Carbon
     {
         return $this->createdAt;
-    }
-
-    /**
-     * @param string $name
-     * @param string $value
-     * @return void
-     */
-    private function setField($name, $value)
-    {
-        if (property_exists($this, $name)) {
-            $this->$name = $value;
-        }
     }
 
     /**

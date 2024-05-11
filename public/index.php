@@ -56,7 +56,7 @@ $app->add(TwigMiddleware::createFromContainer($app));
 
 $router = $app->getRouteCollector()->getRouteParser();
 
-$app->get('/', function ($request, $response) use ($router) {
+$app->get('/', function ($request, $response) {
     $messages = $this->get('flash')->getMessages();
 
     $params = [
