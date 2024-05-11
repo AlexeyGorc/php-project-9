@@ -22,7 +22,7 @@ class UrlCheck
     {
         $this->id = null;
         $this->urlId = 0;
-        $this->statusCode = 0;
+        $this->statusCode = null;
         $this->h1 = '';
         $this->title = '';
         $this->description = '';
@@ -63,9 +63,9 @@ class UrlCheck
     }
 
     /**
-     * @return int
+     * @return int|null
      */
-    public function getStatusCode(): int
+    public function getStatusCode(): ?int
     {
         return $this->statusCode;
     }
