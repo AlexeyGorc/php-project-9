@@ -22,7 +22,7 @@ class UrlCheck
     {
         $this->id = null;
         $this->urlId = 0;
-        $this->statusCode = null;
+        $this->statusCode = 0;
         $this->h1 = '';
         $this->title = '';
         $this->description = '';
@@ -63,7 +63,7 @@ class UrlCheck
     }
 
     /**
-     * @return int|null
+     * @return int
      */
     public function getStatusCode(): ?int
     {
@@ -226,7 +226,7 @@ class UrlCheck
         $url = new self();
 
         $url->id = isset($fields['id']) ? (int)$fields['id'] : null;
-        $url->statusCode = $fields['status_code'] ?? null;
+        $url->statusCode = isset($fields['status_code']) ? (int)$fields['status_code'] : null;
         $url->h1 = $fields['h1'] ?? null;
         $url->title = $fields['title'] ?? null;
         $url->description = $fields['description'] ?? null;
