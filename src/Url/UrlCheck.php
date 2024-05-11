@@ -10,7 +10,7 @@ class UrlCheck
 {
     private ?int $id;
     private int $urlId;
-    private ?int $statusCode;
+    private int $statusCode;
     private ?string $h1;
     private ?string $title;
     private ?string $description;
@@ -65,7 +65,7 @@ class UrlCheck
     /**
      * @return int
      */
-    public function getStatusCode(): ?int
+    public function getStatusCode(): int
     {
         return $this->statusCode;
     }
@@ -73,7 +73,7 @@ class UrlCheck
     /**
      * @return $this
      */
-    public function setStatusCode(?int $code)
+    public function setStatusCode(int $code)
     {
         $this->statusCode = $code;
         return $this;
