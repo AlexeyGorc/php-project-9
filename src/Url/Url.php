@@ -75,7 +75,7 @@ class Url
     }
 
     /**
-     * @return array<int, UrlChecks>|null
+     * @return array<int, UrlCheck>|null
      */
     public function getAllChecks()
     {
@@ -83,13 +83,13 @@ class Url
             return null;
         }
 
-        $urlChecks = UrlChecks::getAllByUrlId($this->getId());
+        $urlChecks = UrlCheck::getAllByUrlId($this->getId());
 
         return (!$urlChecks) ? null : $urlChecks;
     }
 
     /**
-     * @return UrlChecks|null
+     * @return UrlCheck|null
      */
     public function getLastCheck()
     {

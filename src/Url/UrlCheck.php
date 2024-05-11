@@ -6,7 +6,7 @@ use Carbon\Carbon;
 use Hexlet\Code\Database\Connection;
 use Hexlet\Code\Database\SQLExecutor;
 
-class UrlChecks
+class UrlCheck
 {
     private ?int $id;
     private int $urlId;
@@ -90,7 +90,7 @@ class UrlChecks
     /**
      * @return $this
      */
-    public function setH1(string $value = '')
+    public function setH1(?string $value = '')
     {
         $this->h1 = $value;
         return $this;
@@ -124,7 +124,7 @@ class UrlChecks
     /**
      * @return $this
      */
-    public function setDescription(string $string)
+    public function setDescription(?string $string = '')
     {
         $this->description = $string;
         return $this;
@@ -163,7 +163,7 @@ class UrlChecks
     }
 
     /**
-     * @return UrlChecks
+     * @return UrlCheck
      * @throws \Exception
      */
     public function store()
@@ -200,7 +200,7 @@ class UrlChecks
     }
 
     /**
-     * @return array<int, UrlChecks>|null
+     * @return array<int, UrlCheck>|null
      */
     public static function getAllByUrlId(int $url_id = 0)
     {
@@ -223,7 +223,7 @@ class UrlChecks
         }
 
         $returnUrls = array_map(function ($row) {
-            return self::create($row);
+            return self::createFromDatabaseRow($row);
         }, $selectedRows);
 
         return $returnUrls;
@@ -231,25 +231,18 @@ class UrlChecks
 
     /**
      * @param array<string, string> $fields
-     * @return UrlChecks
+     * @return UrlCheck
      */
-    private static function create($fields)
+    private static function createFromDatabaseRow($fields): UrlCheck
     {
         $url = new self();
 
-        if (count($fields) <= 0) {
-            return $url;
-        }
-
-        foreach ($fields as $key => $value) {
-            if ($key === 'created_at') {
-                $url->setCreatedAt($value);
-            } elseif ($key === 'status_code') {
-                $url->setStatusCode((int)$value);
-            } else {
-                $url->setField($key, (string)$value);
-            }
-        }
+        $url->id = isset($fields['id']) ? (int)$fields['id'] : null;
+        $url->statusCode = $fields['status_code'] ?? null;
+        $url->h1 = $fields['h1'] ?? null;
+        $url->title = $fields['title'] ?? null;
+        $url->description = $fields['description'] ?? null;
+        $url->createdAt = isset($fields['created_at']) ? Carbon::parse($fields['created_at']) : null;
 
         return $url;
     }

@@ -10,3 +10,6 @@ validate:
 
 lint:
 	composer exec --verbose phpcs -- --standard=PSR12 src public
+
+lint-fix:
+	composer exec phpcbf -- --standard=PSR12 src public

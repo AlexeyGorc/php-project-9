@@ -8,7 +8,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\RequestException;
 use Hexlet\Code\Url\Url;
-use Hexlet\Code\Url\UrlChecks;
+use Hexlet\Code\Url\UrlCheck;
 use Slim\Factory\AppFactory;
 use Slim\Views\Twig;
 use Slim\Views\TwigMiddleware;
@@ -60,8 +60,7 @@ $app->get('/', function ($request, $response) use ($router) {
     $messages = $this->get('flash')->getMessages();
 
     $params = [
-        'flash' => $messages,
-        'currentPage' => $router->urlFor('index')
+        'flash' => $messages
     ];
     return $this->get('view')->render($response, 'index.twig', $params);
 })->setName('index');
@@ -71,8 +70,7 @@ $app->get('/urls', function ($request, $response) use ($router) {
 
     $params = [
         'router' => $router,
-        'urls' => $urls,
-        'currentPage' => $router->urlFor('url.index')
+        'urls' => $urls
     ];
 
     return $this->get('view')->render($response, 'urls/index.twig', $params);
@@ -89,8 +87,7 @@ $app->post('/urls', function ($request, $response) use ($router) {
     if (!$v->validate()) {
         $params = [
             'errors' => $v->errors(),
-            'name' => $parsedUrl,
-            'currentPage' => $router->urlFor('index')
+            'name' => $parsedUrl
         ];
         return $this->get('view')->render($response->withStatus(422), 'index.twig', $params);
     }
@@ -138,14 +135,33 @@ $app->post('/urls/{id:[0-9]+}/checks', function ($request, $response, $args) use
         return $response->withRedirect($router->urlFor('index'));
     }
 
-    $responseBody = null;
-
     try {
         $guzzleClient = new Client(['connect_timeout' => 3]);
         $guzzleResponse = $guzzleClient->request('GET', $url->getName());
         $guzzleResponse->getStatusCode();
         $statusCode = $guzzleResponse->getStatusCode();
         $responseBody = (string) $guzzleResponse->getBody();
+
+        $document = new Document($responseBody);
+        $documentTitle = optional($document->first('title'))->text();
+        $documentH1 = optional($document->first('h1'))->text();
+        $documentDescription = optional($document->first('meta[name="description"]'))->attr('content');
+
+        if (!$statusCode) {
+            $this->get('flash')->addMessage('danger', 'Произошла ошибка при проверке, не удалось подключиться');
+            return $response->withRedirect($router->urlFor('url.show', ['id' => $id]));
+        }
+
+        $urlCheck = new UrlCheck();
+        $urlCheckId = $urlCheck->setUrlId($id)->setStatusCode((int)$statusCode)->setH1($documentH1)
+            ->setTitle($documentTitle)->setDescription($documentDescription)->store()->getId();
+
+        if ($urlCheckId <= 0) {
+            $this->get('flash')->addMessage('danger', 'Что-то пошло не так');
+            return $response->withRedirect($router->urlFor('index'));
+        }
+
+        $this->get('flash')->addMessage('success', 'Страница успешно проверена');
     } catch (ConnectException $e) {
         $statusCode = $e->getCode();
         if (!$statusCode) {
@@ -153,7 +169,6 @@ $app->post('/urls/{id:[0-9]+}/checks', function ($request, $response, $args) use
             return $response->withRedirect($router->urlFor('url.show', ['id' => $id]));
         }
     } catch (RequestException $e) {
-        $statusCode = $e->getCode();
         if ($e->hasResponse()) {
             $guzzleResponse = $e->getResponse();
             if ($guzzleResponse instanceof \Psr\Http\Message\ResponseInterface) {
@@ -161,34 +176,12 @@ $app->post('/urls/{id:[0-9]+}/checks', function ($request, $response, $args) use
                 $responseBody = (string) $guzzleResponse->getBody();
             }
         }
+
+        $this->get('flash')->addMessage('warning', 'Проверка была выполнена успешно, но сервер ответил с ошибкой');
+        return $response->withRedirect($router->urlFor('url.show', ['id' => $id]));
     } catch (\RuntimeException $e) {
         $this->get('flash')->addMessage('danger', $e->getMessage());
         return $response->withRedirect($router->urlFor('url.show', ['id' => $id]));
-    }
-
-    $document = new Document($responseBody);
-    $documentTitle = optional($document->first('title'))->text();
-    $documentH1 = optional($document->first('h1'))->text();
-    $documentDescription = optional($document->first('meta[name="description"]'))->attr('content');
-
-    if (!$statusCode) {
-        $this->get('flash')->addMessage('danger', 'Произошла ошибка при проверке, не удалось подключиться');
-        return $response->withRedirect($router->urlFor('url.show', ['id' => $id]));
-    }
-
-    $urlCheck = new UrlChecks();
-    $urlCheckId = $urlCheck->setUrlId($id)->setStatusCode((int)$statusCode)->setH1($documentH1)
-        ->setTitle($documentTitle)->setDescription($documentDescription)->store()->getId();
-
-    if ($urlCheckId <= 0) {
-        $this->get('flash')->addMessage('danger', 'Что-то пошло не так');
-        return $response->withRedirect($router->urlFor('index'));
-    }
-
-    if ($statusCode >= 400) {
-        $this->get('flash')->addMessage('warning', 'Проверка была выполнена успешно, но сервер ответил с ошибкой');
-    } else {
-        $this->get('flash')->addMessage('success', 'Страница успешно проверена');
     }
 
     return $response->withRedirect($router->urlFor('url.show', ['id' => $id]));
