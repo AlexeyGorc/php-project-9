@@ -73,7 +73,7 @@ class UrlCheck
     /**
      * @return $this
      */
-    public function setStatusCode(?int $code = null)
+    public function setStatusCode(?int $code)
     {
         $this->statusCode = $code;
         return $this;
